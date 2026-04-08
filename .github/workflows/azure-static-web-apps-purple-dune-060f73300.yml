@@ -46,7 +46,7 @@ jobs:
           api_location: ""
 
           # ✅ IMPORTANT FIX
-          skip_app_build: true
+          skip_app_build: false
           output_location: "dist/panchang-pwa/browser"
 
   close_pull_request_job:
