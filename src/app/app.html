@@ -9,8 +9,8 @@
     </div>
   </div>
 
-  <!-- Header -->
-  <header class="app-header">
+  <!-- Header (only show when logged in) -->
+  <header class="app-header" *ngIf="isLoggedIn()">
     <div class="header-content">
       <div class="brand-section">
         <div class="brand-logo">
@@ -22,7 +22,7 @@
           <p class="brand-subtitle">Timely panchang audio for every day</p>
         </div>
       </div>
-      <button *ngIf="isLoggedIn()" class="logout-btn" (click)="logout()">
+      <button class="logout-btn" (click)="logout()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
           <polyline points="16,17 21,12 16,7"></polyline>
@@ -33,57 +33,10 @@
     </div>
   </header>
 
-  <!-- Main Content -->
+  <!-- Main Content - Router Outlet -->
   <div class="main-content">
     <div class="content-wrapper">
-      <!-- Welcome Section (shown when not logged in) -->
-      <section class="welcome-section" *ngIf="!isLoggedIn()">
-        <div class="welcome-card">
-          <div class="card-glow"></div>
-          <div class="welcome-content">
-            <div class="hero-logo">
-              <div class="logo-3d">
-                <div class="logo-shadow"></div>
-                <span class="logo-main">ॐ</span>
-                <div class="logo-reflection"></div>
-              </div>
-            </div>
-            <div class="hero-text">
-              <h2 class="hero-title">Welcome to Panchang PWA</h2>
-              <p class="hero-description">
-                Experience the ancient wisdom of panchang through modern technology.
-                Get personalized audio insights for your daily spiritual guidance.
-              </p>
-            </div>
-            <div class="hero-features">
-              <div class="feature-item">
-                <div class="feature-icon">🎵</div>
-                <span>Audio Insights</span>
-              </div>
-              <div class="feature-item">
-                <div class="feature-icon">📅</div>
-                <span>Daily Updates</span>
-              </div>
-              <div class="feature-item">
-                <div class="feature-icon">🔒</div>
-                <span>Secure Access</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Router Outlet for Login/Form -->
-      <section class="router-section">
-        <div class="router-card">
-          <div class="card-3d-effect">
-            <div class="card-shadow"></div>
-            <div class="card-content">
-              <router-outlet></router-outlet>
-            </div>
-          </div>
-        </div>
-      </section>
+      <router-outlet></router-outlet>
     </div>
   </div>
 </main>

@@ -6,4 +6,5 @@ import { AuthGuard } from './guards/auth.guard';
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: '', component: PanchangFormComponent, canActivate: [AuthGuard] },
+  { path: '**', redirectTo: '/login' }
 ];

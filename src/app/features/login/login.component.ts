@@ -62,9 +62,20 @@ import { AuthService } from '../../services/auth.service';
               </form>
 
               <div class="text-center login-demo">
-                <small class="text-muted">
-                  Demo credentials: user@example.com / password
+                <small class="text-muted mb-2 d-block">
+                  <strong>Demo Credentials:</strong>
                 </small>
+                <div class="demo-credentials">
+                  <div class="credential-item">
+                    <code>user@example.com / password</code>
+                  </div>
+                  <div class="credential-item">
+                    <code>admin@panchang.com / admin123</code>
+                  </div>
+                  <div class="credential-item">
+                    <code>test@test.com / test123</code>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -98,14 +109,18 @@ export class LoginComponent {
       next: (success) => {
         this.loading = false;
         if (success) {
+          console.log('Login successful for:', email);
+          // Navigate to the protected route after successful login
           this.router.navigate(['/']);
         } else {
-          alert('Invalid credentials');
+          alert('Invalid credentials. Please check your email and password.');
+          this.loginForm.get('password')?.setValue(''); // Clear password on failure
         }
       },
-      error: () => {
+      error: (error) => {
         this.loading = false;
-        alert('Login failed');
+        console.error('Login error:', error);
+        alert('Login failed. Please try again later.');
       },
     });
   }
