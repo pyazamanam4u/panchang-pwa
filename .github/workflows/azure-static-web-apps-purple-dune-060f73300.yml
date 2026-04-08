@@ -42,12 +42,12 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
 
-          app_location: "/"
+          app_location: "dist/panchang-pwa/browser"
           api_location: ""
 
           # ✅ IMPORTANT FIX
-          skip_app_build: true
-          app_artifact_location: "dist/panchang-pwa/browser"
+           skip_app_build: true
+          # app_artifact_location: "dist/panchang-pwa/browser"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
