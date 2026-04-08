@@ -19,22 +19,35 @@ jobs:
       # ✅ Checkout
       - uses: actions/checkout@v3
 
-      # ✅ Install dependencies
+      # ✅ Use correct Node version (IMPORTANT for Angular)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # ✅ Clean install (avoids dependency issues)
       - name: Install Dependencies
-        run: npm install
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
 
       # ✅ Build Angular app
       - name: Build Angular App
         run: npm run build -- --configuration production
 
-      # 🔍 Debug (important for verification)
+      # 🔍 Debug (verify output)
       - name: Verify Build Output
         run: |
+          echo "DIST"
           ls -la dist
+
+          echo "APP"
           ls -la dist/panchang-pwa
+
+          echo "BROWSER"
           ls -la dist/panchang-pwa/browser
 
-      # 🚀 Deploy
+      # 🚀 Deploy (NO Azure build)
       - name: Deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -42,12 +55,9 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
 
-          app_location: "/"
-          api_location: ""
-
-          # ✅ IMPORTANT FIX
-          skip_app_build: false
-          output_location: "dist/panchang-pwa/browser"
+          # 🔥 CRITICAL FIXES
+          skip_app_build: true
+          app_location: "dist/panchang-pwa/browser"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
