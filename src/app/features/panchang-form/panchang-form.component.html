@@ -1,42 +1,108 @@
-﻿<div class="panchang-form-container">
-  <!-- Form Header -->
-  <div class="form-header">
-    <div class="header-icon">
-      <div class="icon-glow"></div>
+﻿<div class="panchang-form-container" role="main" id="main-content">
+  <!-- Full Screen Audio Loading Overlay -->
+  <div class="audio-loading-overlay" *ngIf="audioPlaying() || audioPaused()" aria-live="assertive" role="status">
+    <div class="audio-loading-content">
+      <div class="audio-loading-icon">
+        <div class="loading-pulse"></div>
+        <span class="loading-om">ॐ</span>
+      </div>
+      <!-- <div class="audio-loading-text">
+        <h2 class="loading-title">Playing Your Samkalpa</h2>
+        <p class="loading-subtitle">
+          {{ audioPlaying() ? 'ॐ... Chanting your personalized samkalpa' : 'Samkalpa paused. Tap to resume.' }}
+        </p>
+        <div class="loading-progress" *ngIf="audioPlaying()">
+          <div class="progress-wave">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+        </div>
+      </div> -->
+      <div class="audio-controls-overlay">
+        <button
+          type="button"
+          class="overlay-play-button"
+          (click)="togglePlayback()"
+          [attr.aria-label]="getPlaybackButtonLabel()"
+        >
+          <svg
+            *ngIf="!audioPlaying()"
+            class="overlay-play-icon"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <svg
+            *ngIf="audioPlaying()"
+            class="overlay-pause-icon"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="overlay-stop-button"
+          (click)="stopSamkalpa()"
+          aria-label="Stop samkalpa audio"
+        >
+          <svg class="overlay-stop-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Section -->
+  <header class="form-header" role="banner">
+    <div class="header-icon" aria-hidden="true">
       <span class="icon-symbol">ॐ</span>
     </div>
     <div class="header-content">
       <h1 class="form-title">Generate Your Panchang Audio</h1>
       <p class="form-subtitle">
-        Enter your details to receive a personalized audio summary of today\'s panchang insights
+        Enter your details to receive a personalized audio summary of today's panchang insights
       </p>
     </div>
-  </div>
+  </header>
 
-  <!-- Form Body -->
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="panchang-form" novalidate>
+  <!-- Form Section -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="panchang-form" novalidate role="form" [attr.aria-labelledby]="'form-title'">
     <!-- Name Field -->
     <div class="form-group">
       <label for="name" class="form-label">
-        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
         Full Name
       </label>
-      <div class="input-wrapper">
-        <input
-          id="name"
-          type="text"
-          class="form-input"
-          formControlName="name"
-          placeholder="Enter your full name"
-          [class.error]="nameControl.invalid && nameControl.touched"
-        />
-        <div class="input-focus-ring"></div>
-      </div>
-      <div class="error-message" *ngIf="nameControl.invalid && nameControl.touched">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <input
+        id="name"
+        type="text"
+        class="form-input"
+        formControlName="name"
+        placeholder="Enter your full name"
+        [class.error]="nameControl.invalid && nameControl.touched"
+        aria-required="true"
+        [attr.aria-invalid]="nameControl.invalid && nameControl.touched ? 'true' : 'false'"
+        [attr.aria-describedby]="nameControl.invalid && nameControl.touched ? 'name-error' : null"
+      />
+      <div class="error-message" *ngIf="nameControl.invalid && nameControl.touched" id="name-error" role="alert" aria-live="polite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -48,24 +114,24 @@
     <!-- Gotra Field -->
     <div class="form-group">
       <label for="gotra" class="form-label">
-        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
         </svg>
         Gotra
       </label>
-      <div class="input-wrapper">
-        <input
-          id="gotra"
-          type="text"
-          class="form-input"
-          formControlName="gotra"
-          placeholder="Enter your gotra"
-          [class.error]="gotraControl.invalid && gotraControl.touched"
-        />
-        <div class="input-focus-ring"></div>
-      </div>
-      <div class="error-message" *ngIf="gotraControl.invalid && gotraControl.touched">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <input
+        id="gotra"
+        type="text"
+        class="form-input"
+        formControlName="gotra"
+        placeholder="Enter your gotra"
+        [class.error]="gotraControl.invalid && gotraControl.touched"
+        aria-required="true"
+        [attr.aria-invalid]="gotraControl.invalid && gotraControl.touched ? 'true' : 'false'"
+        [attr.aria-describedby]="gotraControl.invalid && gotraControl.touched ? 'gotra-error' : null"
+      />
+      <div class="error-message" *ngIf="gotraControl.invalid && gotraControl.touched" id="gotra-error" role="alert" aria-live="polite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -74,10 +140,100 @@
       </div>
     </div>
 
+    <!-- Deity Field -->
+    <div class="form-group">
+      <label for="deity" class="form-label">
+        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"></path>
+        </svg>
+        Deity / God Name
+      </label>
+      <input
+        id="deity"
+        type="text"
+        class="form-input"
+        formControlName="deity"
+        placeholder="Enter the deity name for samkalpa"
+        [class.error]="deityControl.invalid && deityControl.touched"
+        aria-required="true"
+        [attr.aria-invalid]="deityControl.invalid && deityControl.touched ? 'true' : 'false'"
+        [attr.aria-describedby]="deityControl.invalid && deityControl.touched ? 'deity-error' : null"
+      />
+      <div class="error-message" *ngIf="deityControl.invalid && deityControl.touched" id="deity-error" role="alert" aria-live="polite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        {{ deityControl.errors?.['required'] ? 'Deity name is required' : 'Please enter a valid deity name' }}
+      </div>
+    </div>
+
+    <!-- Sankalpa Goal Field -->
+    <div class="form-group">
+      <label for="goal" class="form-label">
+        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"></path>
+        </svg>
+        Specific Goal / Sankalpa
+      </label>
+      <input
+        id="goal"
+        type="text"
+        class="form-input"
+        formControlName="goal"
+        placeholder="Enter your sankalpa goal"
+        [class.error]="goalControl.invalid && goalControl.touched"
+        aria-required="true"
+        [attr.aria-invalid]="goalControl.invalid && goalControl.touched ? 'true' : 'false'"
+        [attr.aria-describedby]="goalControl.invalid && goalControl.touched ? 'goal-error' : null"
+      />
+      <div class="error-message" *ngIf="goalControl.invalid && goalControl.touched" id="goal-error" role="alert" aria-live="polite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        {{ goalControl.errors?.['required'] ? 'Goal is required' : 'Please describe your sankalpa goal (minimum 5 characters)' }}
+      </div>
+    </div>
+
+    <!-- Location Field -->
+    <div class="form-group">
+      <label for="location" class="form-label">
+        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        Location
+      </label>
+      <select
+        id="location"
+        class="form-input form-select"
+        formControlName="location"
+        [class.error]="locationControl.invalid && locationControl.touched"
+        aria-required="true"
+        [attr.aria-invalid]="locationControl.invalid && locationControl.touched ? 'true' : 'false'"
+        [attr.aria-describedby]="locationControl.invalid && locationControl.touched ? 'location-error' : null"
+      >
+        <option *ngFor="let loc of locations" [value]="loc.name">
+          {{ loc.name }}
+        </option>
+      </select>
+      <div class="error-message" *ngIf="locationControl.invalid && locationControl.touched" id="location-error" role="alert" aria-live="polite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        Location is required
+      </div>
+    </div>
+
     <!-- Date Field -->
     <div class="form-group">
       <label for="date" class="form-label">
-        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="label-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="16" y1="2" x2="16" y2="6"></line>
           <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -93,9 +249,9 @@
           formControlName="date"
           readonly
           [attr.aria-readonly]="'true'"
+          aria-describedby="date-note"
         />
-        <div class="input-focus-ring"></div>
-        <div class="date-lock-indicator">
+        <div class="date-lock-indicator" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <circle cx="12" cy="16" r="1"></circle>
@@ -103,8 +259,8 @@
           </svg>
         </div>
       </div>
-      <div class="field-note">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="field-note" id="date-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -119,13 +275,15 @@
         type="submit"
         class="submit-button"
         [disabled]="form.invalid || loading()"
+        [attr.aria-describedby]="form.invalid ? 'form-errors' : null"
+        id="submit-button"
       >
         <span class="button-content">
-          <svg *ngIf="!loading()" class="button-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg *ngIf="!loading()" class="button-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <polygon points="23 7 16 12 23 17 23 7"></polygon>
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
           </svg>
-          <div *ngIf="loading()" class="button-spinner">
+          <div *ngIf="loading()" class="button-spinner" aria-hidden="true">
             <div class="spinner-dot"></div>
             <div class="spinner-dot"></div>
             <div class="spinner-dot"></div>
@@ -134,16 +292,15 @@
             {{ loading() ? 'Generating Audio...' : 'Generate Panchang Audio' }}
           </span>
         </span>
-        <div class="button-glow"></div>
       </button>
     </div>
   </form>
 
   <!-- Status Messages -->
-  <div class="status-section" *ngIf="submitted() && !loading()">
-    <div class="status-card" [ngClass]="{'success': audioUrl(), 'error': error()}">
-      <div class="status-icon">
-        <svg *ngIf="audioUrl()" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <section class="status-section" *ngIf="submitted() && !loading()" aria-live="polite" aria-atomic="true">
+    <div class="status-card" [ngClass]="{'success': generatedSamkalpa(), 'error': error()}">
+      <div class="status-icon" aria-hidden="true">
+        <svg *ngIf="generatedSamkalpa()" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22,4 12,14.01 9,11.01"></polyline>
         </svg>
@@ -155,47 +312,128 @@
       </div>
       <div class="status-content">
         <h3 class="status-title">
-          {{ audioUrl() ? 'Audio Generated Successfully!' : 'Generation Failed' }}
+          {{ generatedSamkalpa() ? 'Samkalpa Generated Successfully!' : 'Generation Failed' }}
         </h3>
         <p class="status-message">
-          {{ audioUrl() ? 'Your personalized panchang audio is ready to play.' : error() }}
+          {{ generatedSamkalpa() ? 'Your personalized samkalpa is ready to play.' : error() }}
         </p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Audio Player -->
-  <div class="audio-section" *ngIf="audioUrl()">
+  <!-- Audio Player - Show immediately after generation -->
+  <section class="audio-section" *ngIf="generatedSamkalpa()" aria-labelledby="audio-title">
+    <!-- Back to Form Button - Always available -->
+    <div class="back-to-form-section">
+      <button
+        type="button"
+        class="back-button"
+        (click)="returnToForm()"
+        aria-label="Return to form"
+      >
+        <svg class="back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span class="back-text">Back to Form</span>
+      </button>
+    </div>
+
     <div class="audio-card">
       <div class="audio-header">
-        <div class="audio-icon">
+        <div class="audio-icon" aria-hidden="true">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           </svg>
         </div>
         <div class="audio-info">
-          <h3 class="audio-title">Your Panchang Audio</h3>
-          <p class="audio-date">Generated for {{ form.get('date')?.value | date:'fullDate' }}</p>
+          <h3 class="audio-title" id="audio-title">Your Personalized Samkalpa</h3>
+          <p class="audio-date" aria-live="polite">
+            {{ audioPlaying() ? 'ॐ... Playing your samkalpa' : audioPaused() ? 'Samkalpa paused. Resume or stop.' : 'Click play to hear your samkalpa' }}
+          </p>
+          <p class="audio-cache-note" *ngIf="audioCacheUsed()" aria-live="polite">
+            Using cached audio for faster playback
+          </p>
         </div>
       </div>
       <div class="audio-player">
-        <audio [src]="audioUrl()" controls class="audio-element"></audio>
-        <div class="audio-controls">
-          <button class="control-button" onclick="document.querySelector('.audio-element').play()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            Play
+        <div class="audio-controls" role="group" aria-label="Audio playback controls">
+          <!-- Main Play/Pause Button -->
+          <button
+            type="button"
+            class="main-play-button"
+            (click)="togglePlayback()"
+            [disabled]="!speechReady()"
+            [attr.aria-label]="getPlaybackButtonLabel()"
+            [attr.aria-pressed]="audioPlaying()"
+          >
+            <div class="button-content">
+              <!-- Play Icon -->
+              <svg
+                *ngIf="!audioPlaying() && !audioPaused()"
+                class="play-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+
+              <!-- Pause Icon -->
+              <svg
+                *ngIf="audioPlaying()"
+                class="pause-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+
+              <!-- Resume Icon -->
+              <svg
+                *ngIf="audioPaused()"
+                class="resume-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+
+              <span class="button-text">{{ getPlaybackButtonText() }}</span>
+            </div>
           </button>
-          <button class="control-button secondary" onclick="document.querySelector('.audio-element').pause()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
+
+          <!-- Stop Button -->
+          <button
+            type="button"
+            class="secondary-button stop-button"
+            (click)="stopSamkalpa()"
+            [disabled]="!audioPlaying() && !audioPaused()"
+            aria-label="Stop samkalpa audio"
+          >
+            <svg class="stop-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             </svg>
-            Pause
+            <span class="button-text">Stop</span>
           </button>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="audio-progress" *ngIf="audioPlaying() || audioPaused()" aria-live="polite">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+          </div>
+          <span class="progress-text">{{ audioPlaying() ? 'Playing...' : 'Paused' }}</span>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>
