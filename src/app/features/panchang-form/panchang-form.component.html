@@ -1,15 +1,24 @@
 ﻿<div class="panchang-form-container" role="main" id="main-content">
   <!-- Full Screen Audio Loading Overlay -->
-  <div class="audio-loading-overlay" *ngIf="audioPlaying() || audioPaused()" aria-live="assertive" role="status">
+  <div class="audio-loading-overlay" *ngIf="generatedSamkalpa()" aria-live="assertive" role="status">
+    <header class="audio-overlay-header">
+      <h1 class="overlay-title">Panchang Audio Playback</h1>
+    </header>
     <div class="audio-loading-content">
       <div class="audio-loading-icon">
         <div class="loading-pulse"></div>
         <span class="loading-om">ॐ</span>
       </div>
-      <!-- <div class="audio-loading-text">
-        <h2 class="loading-title">Playing Your Samkalpa</h2>
+      <div class="audio-loading-text">
+        <h2 class="loading-title">
+          {{ audioPlaying() ? 'Playing Your Personalized Samkalpa' : audioPaused() ? 'Samkalpa Paused' : 'Your Samkalpa Is Ready' }}
+        </h2>
         <p class="loading-subtitle">
-          {{ audioPlaying() ? 'ॐ... Chanting your personalized samkalpa' : 'Samkalpa paused. Tap to resume.' }}
+          {{ audioPlaying()
+            ? 'ॐ... Enjoy the full-screen playback experience.'
+            : audioPaused()
+            ? 'Tap resume to continue the chant.'
+            : 'Tap play to listen to your modern samkalpa audio.' }}
         </p>
         <div class="loading-progress" *ngIf="audioPlaying()">
           <div class="progress-wave">
@@ -20,7 +29,7 @@
             <div class="wave-bar"></div>
           </div>
         </div>
-      </div> -->
+      </div>
       <div class="audio-controls-overlay">
         <button
           type="button"

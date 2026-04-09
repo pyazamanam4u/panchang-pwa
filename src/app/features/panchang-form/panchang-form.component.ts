@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal, OnInit, HostBinding, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { App } from '../../app';
 import { PanchangService } from '../../core/services/panchang.service';
 import { SamkalpaService } from '../../core/services/samkalpa.service';
@@ -11,6 +12,7 @@ import { LoggerService } from '../../core/services/logger.service';
 import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { AccessibilityService } from '../../core/services/accessibility.service';
 import { PerformanceService } from '../../core/services/performance.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   FormData,
   LocationData,
@@ -36,6 +38,7 @@ import {
 })
 export class PanchangFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
   private readonly app = inject(App);
   private readonly panchangService = inject(PanchangService);
   private readonly samkalpaService = inject(SamkalpaService);
@@ -46,6 +49,7 @@ export class PanchangFormComponent implements OnInit {
   private readonly errorHandler = inject(ErrorHandlerService);
   private readonly accessibilityService = inject(AccessibilityService);
   private readonly performanceService = inject(PerformanceService);
+  private readonly authService = inject(AuthService);
 
   readonly today = new Date().toISOString().slice(0, 10);
   readonly loading = signal(false);
@@ -349,5 +353,10 @@ export class PanchangFormComponent implements OnInit {
     this.error.set(null);
     this.logger.logUserAction('returned_to_form');
     this.accessibilityService.announce('Returned to form. You can generate a new samkalpa.');
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

@@ -13,6 +13,7 @@ export class AudioService {
   private readonly isPlaying = signal(false);
   private readonly isPaused = signal(false);
   private readonly isReady = signal(false);
+  private readonly stopRequested = signal(false);
   private readonly error = signal<string | null>(null);
 
   get playing() {
@@ -46,6 +47,7 @@ export class AudioService {
 
     this.logger.debug('Preparing audio for text', { textLength: text.length });
     this.error.set(null);
+    this.stopRequested.set(false);
     this.isReady.set(true);
     this.isPlaying.set(false);
     this.isPaused.set(false);
@@ -65,6 +67,7 @@ export class AudioService {
     }
 
     this.logger.info('Starting audio playback');
+    this.stopRequested.set(false);
 
     // If already speaking and paused, resume
     if (speechSynthesis.paused && speechSynthesis.speaking) {
@@ -74,8 +77,9 @@ export class AudioService {
       return;
     }
 
-    // Cancel any ongoing speech
+    // Cancel any ongoing speech and reset any previous audio run
     speechSynthesis.cancel();
+    this.resetState();
 
     // Process pause markers and create utterances
     this.playWithPauses(text);
@@ -127,6 +131,11 @@ export class AudioService {
     this.error.set(null);
 
     for (const part of parts) {
+      if (this.stopRequested()) {
+        this.logger.debug('Audio playback loop cancelled via stop request');
+        break;
+      }
+
       // Skip empty parts
       if (!part.trim()) continue;
 
@@ -135,7 +144,14 @@ export class AudioService {
         const duration = parseInt(part.replace('__PAUSE_', '').replace('__', ''));
         this.logger.debug(`Pausing for ${duration}ms`);
         await this.delay(duration);
+        if (this.stopRequested()) {
+          break;
+        }
         continue;
+      }
+
+      if (this.stopRequested()) {
+        break;
       }
 
       // Create utterance for text part
@@ -161,10 +177,19 @@ export class AudioService {
         utterance.onend = () => resolve();
         utterance.onerror = () => resolve(); // Continue even if there's an error
       });
+
+      if (this.stopRequested()) {
+        break;
+      }
     }
 
-    // All done
-    this.logger.debug('Audio playback sequence completed');
+    // All done or cancelled
+    if (this.stopRequested()) {
+      this.logger.debug('Audio playback stopped before completion');
+    } else {
+      this.logger.debug('Audio playback sequence completed');
+    }
+
     this.resetState();
   }
 
@@ -257,6 +282,7 @@ export class AudioService {
   stop(): void {
     if (this.isSpeechSynthesisSupported() && (speechSynthesis.speaking || speechSynthesis.paused)) {
       this.logger.debug('Stopping audio playback');
+      this.stopRequested.set(true);
       speechSynthesis.cancel();
       this.resetState();
     }

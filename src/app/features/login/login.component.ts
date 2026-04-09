@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   selector: 'app-login',
   imports: [CommonModule, ReactiveFormsModule],
+  styleUrls: ['./login.component.scss'],
   template: `
    <div class="login-container">
   <div class="login-card">
