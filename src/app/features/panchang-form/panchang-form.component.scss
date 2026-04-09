@@ -812,6 +812,23 @@
   gap: 1rem;
   margin-top: 2rem;
   width: 100%;
+
+  // Fullscreen mode when audio is generated
+  :host([data-audio-mode='fullscreen']) & {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 2rem;
+  }
 }
 
 .back-to-form-section {
@@ -867,6 +884,13 @@
   width: 100%;
   margin: 0 auto;
   animation: slideIn 0.4s ease-out;
+
+  // Fullscreen audio player styling
+  .audio-section:has(+ :not(.panchang-form-container)) & {
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .audio-header {
@@ -1424,4 +1448,221 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ========================================= */
+/* SAFE RESPONSIVE ENHANCEMENTS (NON-BREAKING) */
+/* ========================================= */
+
+/* Improve overlay behavior on all devices */
+.audio-loading-overlay {
+  padding: 1rem;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Ensure content never overflows */
+.audio-loading-content {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Improve overlay controls spacing */
+.audio-controls-overlay {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Better touch targets */
+.overlay-play-button,
+.overlay-stop-button {
+  min-width: 56px;
+  min-height: 56px;
+}
+
+/* ========================================= */
+/* AUDIO PLAYER RESPONSIVENESS FIX */
+/* ========================================= */
+
+/* Allow flexible wrapping instead of breaking layout */
+.audio-controls {
+  flex-wrap: wrap;
+}
+
+/* Prevent overflow in small screens */
+.audio-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Improve button scaling */
+.main-play-button {
+  min-width: 70px;
+  min-height: 70px;
+}
+
+/* Stop button consistency */
+.secondary-button {
+  min-height: 44px;
+}
+
+/* ========================================= */
+/* PROGRESS BAR IMPROVEMENT */
+/* ========================================= */
+
+.audio-progress {
+  flex-wrap: wrap;
+}
+
+.progress-text {
+  white-space: nowrap;
+}
+
+/* ========================================= */
+/* MOBILE OPTIMIZATION (CRITICAL) */
+/* ========================================= */
+
+@media (max-width: 768px) {
+
+  /* Fix overlay centering + padding */
+  .audio-loading-content {
+    padding: 1rem;
+  }
+
+  /* Stack controls nicely */
+  .audio-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Make play button dominant */
+  .main-play-button {
+    width: 100%;
+    max-width: 280px;
+    height: 64px;
+    border-radius: 12px;
+  }
+
+  /* Make stop button full width */
+  .secondary-button {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  /* Improve audio header wrapping */
+  .audio-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Prevent text overflow */
+  .audio-title,
+  .audio-date {
+    word-break: break-word;
+  }
+}
+
+/* ========================================= */
+/* SMALL DEVICES (PHONES) */
+/* ========================================= */
+
+@media (max-width: 480px) {
+
+  /* Reduce overlay icon size */
+  .audio-loading-icon {
+    width: 90px;
+    height: 90px;
+  }
+
+  .loading-om {
+    font-size: 2rem;
+  }
+
+  /* Smaller buttons but still touch friendly */
+  .overlay-play-button,
+  .overlay-stop-button {
+    width: 52px;
+    height: 52px;
+  }
+
+  /* Compact audio player */
+  .audio-card {
+    border-radius: 12px;
+  }
+
+  .audio-player {
+    gap: 0.75rem;
+  }
+
+  /* Buttons stacked nicely */
+  .main-play-button {
+    height: 56px;
+  }
+
+  .secondary-button {
+    font-size: 0.85rem;
+  }
+
+  /* Progress bar spacing */
+  .audio-progress {
+    gap: 0.5rem;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+  }
+}
+
+/* ========================================= */
+/* VERY SMALL DEVICES (EXTRA SAFETY) */
+/* ========================================= */
+
+@media (max-width: 360px) {
+
+  .audio-loading-content {
+    padding: 0.75rem;
+  }
+
+  .main-play-button {
+    font-size: 0.8rem;
+  }
+
+  .secondary-button {
+    font-size: 0.75rem;
+  }
+}
+
+/* ========================================= */
+/* TOUCH + ACCESSIBILITY IMPROVEMENTS */
+/* ========================================= */
+
+button {
+  min-height: 44px;
+}
+
+/* Prevent accidental zoom on inputs (iOS) */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* ========================================= */
+/* PERFORMANCE + SMOOTHNESS */
+/* ========================================= */
+
+.audio-card,
+.audio-loading-content {
+  will-change: transform, opacity;
+}
+
+/* ========================================= */
+/* OPTIONAL: SMOOTHER ANIMATION */
+/* ========================================= */
+
+.audio-controls-overlay button {
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.audio-controls-overlay button:active {
+  transform: scale(0.95);
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit, HostBinding, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { App } from '../../app';
@@ -29,6 +29,10 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './panchang-form.component.html',
   styleUrls: ['./panchang-form.component.scss'],
+  host: {
+    '[attr.data-audio-mode]': 'generatedSamkalpa() ? "fullscreen" : "form"',
+    '[class.audio-fullscreen]': 'generatedSamkalpa()'
+  }
 })
 export class PanchangFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

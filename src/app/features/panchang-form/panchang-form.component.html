@@ -66,8 +66,8 @@
     </div>
   </div>
 
-  <!-- Header Section -->
-  <header class="form-header" role="banner">
+  <!-- Header Section - Hide when audio is generated -->
+  <header class="form-header" role="banner" *ngIf="!generatedSamkalpa()">
     <div class="header-icon" aria-hidden="true">
       <span class="icon-symbol">ॐ</span>
     </div>
@@ -79,8 +79,8 @@
     </div>
   </header>
 
-  <!-- Form Section -->
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="panchang-form" novalidate role="form" [attr.aria-labelledby]="'form-title'">
+  <!-- Form Section - Hide when audio is generated -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="panchang-form" novalidate role="form" [attr.aria-labelledby]="'form-title'" *ngIf="!generatedSamkalpa()">
     <!-- Name Field -->
     <div class="form-group">
       <label for="name" class="form-label">
@@ -296,8 +296,8 @@
     </div>
   </form>
 
-  <!-- Status Messages -->
-  <section class="status-section" *ngIf="submitted() && !loading()" aria-live="polite" aria-atomic="true">
+  <!-- Status Messages - Hide when audio is generated -->
+  <section class="status-section" *ngIf="submitted() && !loading() && !generatedSamkalpa()" aria-live="polite" aria-atomic="true">
     <div class="status-card" [ngClass]="{'success': generatedSamkalpa(), 'error': error()}">
       <div class="status-icon" aria-hidden="true">
         <svg *ngIf="generatedSamkalpa()" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -323,8 +323,8 @@
 
   <!-- Audio Player - Show immediately after generation -->
   <section class="audio-section" *ngIf="generatedSamkalpa()" aria-labelledby="audio-title">
-    <!-- Back to Form Button - Always available -->
-    <div class="back-to-form-section">
+    <!-- Back to Form Button - Only show when audio is generated (fullscreen mode) -->
+    <div class="back-to-form-section" *ngIf="generatedSamkalpa()">
       <button
         type="button"
         class="back-button"
@@ -348,7 +348,7 @@
         <div class="audio-info">
           <h3 class="audio-title" id="audio-title">Your Personalized Samkalpa</h3>
           <p class="audio-date" aria-live="polite">
-            {{ audioPlaying() ? 'ॐ... Playing your samkalpa' : audioPaused() ? 'Samkalpa paused. Resume or stop.' : 'Click play to hear your samkalpa' }}
+            {{ audioPlaying() ? 'ॐ... Playing your sankalpa' : audioPaused() ? 'Samkalpa paused. Resume or stop.' : 'Click play to hear your samkalpa' }}
           </p>
           <p class="audio-cache-note" *ngIf="audioCacheUsed()" aria-live="polite">
             Using cached audio for faster playback

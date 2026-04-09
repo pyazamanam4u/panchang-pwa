@@ -9,79 +9,96 @@ import { AuthService } from '../../services/auth.service';
   selector: 'app-login',
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div class="row justify-content-center w-100">
-        <div class="col-12 col-sm-10 col-md-8 col-lg-5 mx-auto">
-          <div class="card shadow-lg border-0 login-card">
-            <div class="card-body login-body">
-              <div class="text-center login-header">
-                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                  <span class="text-white fs-3">ॐ</span>
-                </div>
-                <h2 class="mt-3 mb-1 login-title">Welcome Back</h2>
-                <p class="text-muted login-subtitle">Sign in to access Panchang PWA</p>
-              </div>
+   <div class="login-container">
+  <div class="login-card">
 
-              <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mb-4">
-                <div class="mb-4">
-                  <label for="email" class="form-label login-label">Email</label>
-                  <input
-                    type="email"
-                    class="form-control form-control-lg rounded-0 login-input"
-                    id="email"
-                    formControlName="email"
-                    placeholder="Enter your email"
-                  />
-                  <div class="invalid-feedback" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-                    Please enter a valid email.
-                  </div>
-                </div>
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <div class="logo-circle">ॐ</div>
+      <h2 class="mt-3 fw-bold">Welcome Back</h2>
+      <p class="text-muted">Sign in to access Panchang</p>
+    </div>
 
-                <div class="mb-4">
-                  <label for="password" class="form-label login-label">Password</label>
-                  <input
-                    type="password"
-                    class="form-control form-control-lg rounded-0 login-input"
-                    id="password"
-                    formControlName="password"
-                    placeholder="Enter your password"
-                  />
-                  <div class="invalid-feedback" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-                    Password is required.
-                  </div>
-                </div>
+    <!-- Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-lg w-100 rounded-0"
-                  [disabled]="loginForm.invalid || loading"
-                >
-                  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  {{ loading ? 'Signing In...' : 'Sign In' }}
-                </button>
-              </form>
+      <!-- Email -->
+      <div class="form-floating mb-3">
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          placeholder="name@example.com"
+          formControlName="email"
+          [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        />
+        <label for="email">Email address</label>
 
-              <div class="text-center login-demo">
-                <small class="text-muted mb-2 d-block">
-                  <strong>Demo Credentials:</strong>
-                </small>
-                <div class="demo-credentials">
-                  <div class="credential-item">
-                    <code>user@example.com / password</code>
-                  </div>
-                  <div class="credential-item">
-                    <code>admin@panchang.com / admin123</code>
-                  </div>
-                  <div class="credential-item">
-                    <code>test@test.com / test123</code>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="invalid-feedback">
+          Please enter a valid email
         </div>
       </div>
+
+      <!-- Password -->
+      <div class="form-floating mb-3 position-relative">
+        <input
+          [type]="'password'"
+          id="password"
+          class="form-control"
+          placeholder="Password"
+          formControlName="password"
+          [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        />
+        <label for="password">Password</label>
+
+        <div class="invalid-feedback">
+          Password is required
+        </div>
+      </div>
+
+      <!-- Remember + Forgot -->
+      <div class="d-flex justify-content-between align-items-center mb-3 small">
+        <div>
+          <input type="checkbox" id="remember" class="form-check-input me-1" />
+          <label for="remember" class="form-check-label">Remember me</label>
+        </div>
+        <a href="#" class="text-decoration-none">Forgot password?</a>
+      </div>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn btn-primary w-100 py-2 fw-semibold"
+        [disabled]="loginForm.invalid || loading"
+      >
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ loading ? 'Signing In...' : 'Sign In' }}
+      </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="text-center my-4">
+      <span class="text-muted small">OR</span>
     </div>
+
+    <!-- Social Login (UI only) -->
+    <div class="d-grid gap-2 mb-3">
+      <button type="button" class="btn btn-outline-dark">
+        Continue with Google
+      </button>
+      <button type="button" class="btn btn-outline-primary">
+        Continue with Microsoft
+      </button>
+    </div>
+
+    <!-- Demo Credentials -->
+    <div class="text-center small text-muted">
+      <div><strong>Demo Credentials</strong></div>
+      <code>user@example.com / password</code>
+    </div>
+
+  </div>
+</div>
   `,
 })
 export class LoginComponent {
