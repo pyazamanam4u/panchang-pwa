@@ -13,11 +13,7 @@ jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    - name: Build App
-        run: |
-          npm install
-          npm run build -- --configuration production
-      - name: Build and Deploy Job
+    name: Build and Deploy Job
     permissions:
        id-token: write
        contents: read
