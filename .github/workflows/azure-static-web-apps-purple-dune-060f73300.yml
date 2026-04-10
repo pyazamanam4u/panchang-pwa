@@ -32,7 +32,10 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
-      - name: Build And Deploy + ${{ env.DATE_TIME}}
+      - name: Build And Deploy 
+      #run: echo "${{ env.DATE_TIME}}
+        run : echo "${{ env.DATE_TIME}}"
+      
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -45,7 +48,6 @@ jobs:
           output_location: "dist/panchang-pwa/browser" # Built app content directory - optional
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
-
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
