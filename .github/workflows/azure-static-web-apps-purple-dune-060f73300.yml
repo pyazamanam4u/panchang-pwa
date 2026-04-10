@@ -32,7 +32,8 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
-      - name: Build And Deploy  "${{ env.DATE_TIME}}"
+      - name: Build And Deploy 
+      run: echo "${{ env.DATE_TIME }}"
       #run: echo "${{ env.DATE_TIME}}
       
         id: builddeploy
