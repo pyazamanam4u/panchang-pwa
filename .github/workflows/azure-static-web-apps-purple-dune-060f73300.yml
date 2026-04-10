@@ -32,10 +32,13 @@ jobs:
                const coredemo = require('@actions/core')
                return await coredemo.getIDToken()
            result-encoding: string
+      - name: Set DATE_TIME
+        run: echo "DATE_TIME=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Use DATE_TIME
+        run: echo "${{ env.DATE_TIME }}"
       - name: Build And Deploy 
-      run: echo "${{ env.DATE_TIME }}"
       #run: echo "${{ env.DATE_TIME}}
-      
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
