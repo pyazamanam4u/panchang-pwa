@@ -1,0 +1,26 @@
+﻿<div class="screen">
+
+  <div class="card">
+
+    <h2>🪔 Sankalpam</h2>
+
+    <div class="state" *ngIf="step==='speaking'">
+      🔊 Speaking...
+    </div>
+
+    <div class="state" *ngIf="step==='listening'">
+      🎤 Listening...
+      <div class="mic"></div>
+    </div>
+
+    <div class="state" *ngIf="step==='confirming'">
+      🧠 Confirming...
+    </div>
+
+    <div class="answer">
+      {{ currentAnswer }}
+    </div>
+
+  </div>
+
+</div>

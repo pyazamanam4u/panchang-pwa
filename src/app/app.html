@@ -1,41 +1,92 @@
 ﻿<main class="app-container">
-  <!-- Global Loading Overlay -->
-  <div class="loading-overlay" *ngIf="isGlobalLoading()">
-    <div class="loading-spinner">
-      <div class="spinner-ring"></div>
-      <div class="spinner-ring"></div>
-      <div class="spinner-ring"></div>
-      <div class="loading-text">Generating your personalized panchang audio...</div>
+
+  <!-- 🌸 DEVOTIONAL BACKGROUND -->
+  <div class="vedic-bg"></div>
+
+  <!-- ✨ FLOATING PARTICLES -->
+  <div class="particles">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- 🔊 GLOBAL SPEECH OVERLAY -->
+  <div class="speech-overlay" *ngIf="isSpeaking || isListening">
+
+    <div class="speech-card">
+
+      <div class="om-symbol">ॐ</div>
+
+      <div class="speech-status">
+
+        <div *ngIf="isSpeaking" class="status speaking">
+          🔊 Speaking divine message...
+        </div>
+
+        <div *ngIf="isListening" class="status listening">
+          🎤 Listening to your sankalpam...
+        </div>
+
+      </div>
+
+      <div class="wave-loader">
+        <span></span><span></span><span></span>
+      </div>
+
     </div>
   </div>
 
-  <!-- Header (only show when logged in and not on login route) -->
+  <!-- 🔥 GLOBAL LOADING -->
+  <div class="loading-overlay" *ngIf="isGlobalLoading()">
+
+    <div class="loading-spinner">
+
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+
+      <div class="loading-text">
+        Preparing your Sankalpam experience...
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 🪔 HEADER -->
   <header class="app-header" *ngIf="showHeader()">
+
     <div class="header-content">
+
       <div class="brand-section">
+
         <div class="brand-logo">
           <div class="logo-glow"></div>
           <span class="logo-symbol">ॐ</span>
         </div>
+
         <div class="brand-text">
-          <h1 class="brand-title">Panchang PWA</h1>
-          <p class="brand-subtitle">Timely panchang audio for every day</p>
+          <h1 class="brand-title">Vedic Sankalpam AI</h1>
+          <p class="brand-subtitle">Voice-powered devotional experience</p>
         </div>
+
       </div>
-      <button class="logout-btn" (click)="logout()" title="Logout">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16,17 21,12 16,7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
+
+      <button class="logout-btn" (click)="logout()">
+        ⏻
       </button>
+
     </div>
+
   </header>
 
-  <!-- Main Content - Router Outlet -->
+  <!-- 📦 MAIN CONTENT -->
   <div class="main-content">
+
     <div class="content-wrapper">
+
       <router-outlet></router-outlet>
+
     </div>
+
   </div>
+
 </main>

@@ -1,0 +1,110 @@
+﻿.screen {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* 🌸 MAIN CARD */
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 25px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  color: white;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+}
+
+/* 🪔 HEADER */
+.header {
+  margin-bottom: 20px;
+}
+
+.om {
+  font-size: 36px;
+  color: gold;
+}
+
+h2 {
+  margin: 5px 0;
+  font-size: 20px;
+}
+
+/* ❓ QUESTION */
+.question {
+  font-size: 22px;
+  margin: 15px 0;
+  line-height: 1.4;
+}
+
+/* 🔄 STATE */
+.state {
+  margin-top: 20px;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.text {
+  margin-top: 5px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* 🎤 MIC */
+.mic {
+  width: 20px;
+  height: 20px;
+  background: red;
+  border-radius: 50%;
+  margin: 10px auto;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: .6; }
+  50% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1); opacity: .6; }
+}
+
+/* 🔊 WAVE */
+.wave span {
+  display: inline-block;
+  width: 5px;
+  height: 15px;
+  margin: 2px;
+  background: gold;
+  animation: wave 1s infinite;
+}
+
+.wave span:nth-child(2) { animation-delay: 0.2s; }
+.wave span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes wave {
+  0%,100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1.5); }
+}
+
+/* 🧾 ANSWER */
+.answer {
+  margin-top: 25px;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.4);
+}
+
+.label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.value {
+  font-size: 20px;
+  color: #00ffcc;
+  margin-top: 5px;
+}

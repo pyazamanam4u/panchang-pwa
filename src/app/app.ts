@@ -13,7 +13,8 @@ export class App {
   private authService = inject(AuthService);
   private router = inject(Router);
   private readonly currentRoute = signal(this.router.url);
-
+isSpeaking = false;
+isListening = false;
   protected readonly title = signal('panchang-pwa');
   protected readonly isLoggedIn = computed(() => this.authService.isLoggedIn());
   protected readonly showHeader = computed(
