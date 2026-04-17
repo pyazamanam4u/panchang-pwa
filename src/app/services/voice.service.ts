@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { LanguageService } from './language.service';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class VoiceService {
 
-  private key = 'Ah9bBtBjOC4qe0pFur23ry8vk5cFnq89lTY34mdEhKp3asLh2NVJJQQJ99CDACGhslBXJ3w3AAAYACOG6RLI';
+  private key =  environment.azureSpeechKey;
   private region = 'centralindia';
 
   private speaking = false;
