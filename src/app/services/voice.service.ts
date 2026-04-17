@@ -7,16 +7,18 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class VoiceService {
 
-  private key =  environment.azureSpeechKey;
+  private key = environment.azureSpeechKey;
   private region = 'centralindia';
 
   private speaking = false;
   private listening = false;
-private speaking$ = new BehaviorSubject<boolean>(false);
-private listening$ = new BehaviorSubject<boolean>(false);
 
-isSpeaking$ = this.speaking$.asObservable();
-isListening$ = this.listening$.asObservable();
+  private speaking$ = new BehaviorSubject<boolean>(false);
+  private listening$ = new BehaviorSubject<boolean>(false);
+
+  isSpeaking$ = this.speaking$.asObservable();
+  isListening$ = this.listening$.asObservable();
+
   constructor(private langService: LanguageService) {}
 
   private wait(ms: number) {
@@ -24,45 +26,58 @@ isListening$ = this.listening$.asObservable();
   }
 
   // =========================
-  // SPEAK (AUTO LANGUAGE)
+  // SPEAK FIXED
   // =========================
   async speak(text: string, lang?: string): Promise<void> {
 
     const language = lang || this.langService.getLanguage();
 
     while (this.speaking) {
-      await this.wait(100);
+      await this.wait(50);
     }
 
-this.speaking$.next(true);
+    this.speaking = true;
+    this.speaking$.next(true);
+
     console.log('🗣️ TTS:', { text, language });
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
 
-      const config =
-        SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
+      try {
 
-      config.speechSynthesisVoiceName = this.getVoice(language);
+        const config =
+          SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
 
-      const synth = new SpeechSDK.SpeechSynthesizer(config);
+        config.speechSynthesisVoiceName = this.getVoice(language);
 
-     synth.speakTextAsync(
-      text,
-      (result) => {
-        synth.close();
-      this.speaking$.next(false); // this.isSpeaking = false;
-        resolve();
-      },
-      (err) => {
-        synth.close();
-      this.speaking$.next(false);  //this.isSpeaking = false;
-        reject(err);
+        const synth = new SpeechSDK.SpeechSynthesizer(config);
+
+        synth.speakTextAsync(
+          text,
+          () => {
+            synth.close();
+            this.speaking = false;
+            this.speaking$.next(false);
+            resolve();
+          },
+          (err) => {
+            synth.close();
+            this.speaking = false;
+            this.speaking$.next(false);
+            reject(err);
+          }
+        );
+
+      } catch (e) {
+        this.speaking = false;
+        this.speaking$.next(false);
+        reject(e);
       }
-    );
     });
   }
+
   // =========================
-  // LISTEN (AUTO LANGUAGE)
+  // LISTEN FIXED
   // =========================
   async listen(lang?: string): Promise<string> {
 
@@ -70,7 +85,9 @@ this.speaking$.next(true);
 
     if (this.listening) return '';
 
-this.listening$.next(true);
+    this.listening = true;
+    this.listening$.next(true);
+
     console.log('🎤 STT:', language);
 
     const config =
@@ -84,31 +101,40 @@ this.listening$.next(true);
     const recognizer =
       new SpeechSDK.SpeechRecognizer(config, audio);
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
 
-      recognizer.recognizeOnceAsync(async result => {
+      recognizer.recognizeOnceAsync(
+        (result) => {
 
-        recognizer.close();
+          recognizer.close();
 
-        this.listening = false;
-        this.listening$.next(false);
-        const text =
-          result.reason === SpeechSDK.ResultReason.RecognizedSpeech
-            ? result.text
-            : '';
+          this.listening = false;
+          this.listening$.next(false);
 
-        console.log('🎙️ RESULT:', text);
+          const text =
+            result.reason === SpeechSDK.ResultReason.RecognizedSpeech
+              ? result.text
+              : '';
 
-        await this.wait(400);
+          console.log('🎙️ RESULT:', text);
 
-        resolve((text || '').trim());
-      });
+          resolve((text || '').trim());
+        },
+        (err) => {
+          recognizer.close();
+          this.listening = false;
+          this.listening$.next(false);
+          reject(err);
+        }
+      );
     });
   }
 
   stop() {
     this.speaking = false;
     this.listening = false;
+    this.speaking$.next(false);
+    this.listening$.next(false);
   }
 
   private getVoice(lang: string) {
@@ -121,8 +147,4 @@ this.listening$.next(true);
 
     return map[lang] || map['en-IN'];
   }
-}
-
-function reject(err: string) {
-  throw new Error('Function not implemented.');
 }
