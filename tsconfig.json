@@ -16,12 +16,17 @@
     "module": "preserve"
   },
   "angularCompilerOptions": {
+     "allowedCommonJsDependencies": [
+      "microsoft-cognitiveservices-speech-sdk"
+    ],
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "strictTemplates": true,
+    
   },
   "files": [],
+  "types" : [],
   "references": [
     {
       "path": "./tsconfig.app.json"

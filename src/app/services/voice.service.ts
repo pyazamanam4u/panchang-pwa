@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+declare var SpeechSDK: any;
 import { LanguageService } from './language.service';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -7,62 +7,77 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class VoiceService {
 
-  private key =  environment.azureSpeechKey;
-  private region = 'centralindia';
+  private key = environment.azureSpeechKey;
+  private region = 'eastus2';
 
   private speaking = false;
   private listening = false;
-private speaking$ = new BehaviorSubject<boolean>(false);
-private listening$ = new BehaviorSubject<boolean>(false);
 
-isSpeaking$ = this.speaking$.asObservable();
-isListening$ = this.listening$.asObservable();
+  private speaking$ = new BehaviorSubject<boolean>(false);
+  private listening$ = new BehaviorSubject<boolean>(false);
+
+  isSpeaking$ = this.speaking$.asObservable();
+  isListening$ = this.listening$.asObservable();
+
   constructor(private langService: LanguageService) {}
 
-  private wait(ms: number) {
+  private wait(ms: number): Promise<void> {
     return new Promise(res => setTimeout(res, ms));
   }
 
   // =========================
-  // SPEAK (AUTO LANGUAGE)
+  // TEXT TO SPEECH
   // =========================
   async speak(text: string, lang?: string): Promise<void> {
 
     const language = lang || this.langService.getLanguage();
 
+    // Prevent overlapping speech
     while (this.speaking) {
-      await this.wait(100);
+      await this.wait(50);
     }
 
-this.speaking$.next(true);
+    this.speaking = true;
+    this.speaking$.next(true);
+
     console.log('🗣️ TTS:', { text, language });
 
-    return new Promise(resolve => {
+    return new Promise<void>((resolve, reject) => {
 
-      const config =
-        SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
+      try {
+        const config = SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
+        config.speechSynthesisVoiceName = this.getVoice(language);
 
-      config.speechSynthesisVoiceName = this.getVoice(language);
+        const synth = new SpeechSDK.SpeechSynthesizer(config);
 
-      const synth = new SpeechSDK.SpeechSynthesizer(config);
+        synth.speakTextAsync(
+          text,
+          () => {
+            synth.close();
+            this.speaking = false;
+            this.speaking$.next(false);
+            resolve();
+          },
+          (err: unknown) => {   // ✅ FIXED typing
+            console.error('TTS Error:', err);
+            synth.close();
+            this.speaking = false;
+            this.speaking$.next(false);
+            reject(err);
+          }
+        );
 
-     synth.speakTextAsync(
-      text,
-      (result) => {
-        synth.close();
-      this.speaking$.next(false); // this.isSpeaking = false;
-        resolve();
-      },
-      (err) => {
-        synth.close();
-      this.speaking$.next(false);  //this.isSpeaking = false;
-        reject(err);
+      } catch (e: unknown) {
+        console.error('TTS Exception:', e);
+        this.speaking = false;
+        this.speaking$.next(false);
+        reject(e);
       }
-    );
     });
   }
+
   // =========================
-  // LISTEN (AUTO LANGUAGE)
+  // SPEECH TO TEXT
   // =========================
   async listen(lang?: string): Promise<string> {
 
@@ -70,50 +85,64 @@ this.speaking$.next(true);
 
     if (this.listening) return '';
 
-this.listening$.next(true);
+    this.listening = true;
+    this.listening$.next(true);
+
     console.log('🎤 STT:', language);
 
-    const config =
-      SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
-
+    const config = SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
     config.speechRecognitionLanguage = language;
 
-    const audio =
-      SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const audio = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const recognizer = new SpeechSDK.SpeechRecognizer(config, audio);
 
-    const recognizer =
-      new SpeechSDK.SpeechRecognizer(config, audio);
+    return new Promise<string>((resolve, reject) => {
 
-    return new Promise(resolve => {
+      recognizer.recognizeOnceAsync(
+        (result: any) => {   // ✅ FIXED typing
+          recognizer.close();
 
-      recognizer.recognizeOnceAsync(async result => {
+          this.listening = false;
+          this.listening$.next(false);
 
-        recognizer.close();
+          const text =
+            result?.reason === SpeechSDK.ResultReason.RecognizedSpeech
+              ? result.text
+              : '';
 
-        this.listening = false;
-        this.listening$.next(false);
-        const text =
-          result.reason === SpeechSDK.ResultReason.RecognizedSpeech
-            ? result.text
-            : '';
+          console.log('🎙️ RESULT:', text);
 
-        console.log('🎙️ RESULT:', text);
+          resolve((text || '').trim());
+        },
+        (err: unknown) => {   // ✅ FIXED typing
+          console.error('STT Error:', err);
+          recognizer.close();
 
-        await this.wait(400);
+          this.listening = false;
+          this.listening$.next(false);
 
-        resolve((text || '').trim());
-      });
+          reject(err);
+        }
+      );
     });
   }
 
-  stop() {
+  // =========================
+  // STOP (STATE RESET)
+  // =========================
+  stop(): void {
     this.speaking = false;
     this.listening = false;
+    this.speaking$.next(false);
+    this.listening$.next(false);
   }
 
-  private getVoice(lang: string) {
+  // =========================
+  // VOICE MAPPING
+  // =========================
+  private getVoice(lang: string): string {
 
-    const map: any = {
+    const map: Record<string, string> = {
       'en-IN': 'en-IN-PrabhatNeural',
       'hi-IN': 'hi-IN-MadhurNeural',
       'te-IN': 'te-IN-MohanNeural'
@@ -121,8 +150,4 @@ this.listening$.next(true);
 
     return map[lang] || map['en-IN'];
   }
-}
-
-function reject(err: string) {
-  throw new Error('Function not implemented.');
 }
