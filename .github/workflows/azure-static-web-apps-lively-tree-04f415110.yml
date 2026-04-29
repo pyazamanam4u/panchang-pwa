@@ -16,7 +16,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
+<<<<<<< HEAD
           node-version: 18
+=======
+           node-version: 20.19.0
+           cache: 'npm'
+>>>>>>> 0c1c34bbeb82f30677fe2318b8736601a6ff7a1b
 
       - name: Install dependencies
         run: npm install
