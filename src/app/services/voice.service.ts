@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+declare var SpeechSDK: any;
 import { LanguageService } from './language.service';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -21,17 +21,18 @@ export class VoiceService {
 
   constructor(private langService: LanguageService) {}
 
-  private wait(ms: number) {
+  private wait(ms: number): Promise<void> {
     return new Promise(res => setTimeout(res, ms));
   }
 
   // =========================
-  // SPEAK FIXED
+  // TEXT TO SPEECH
   // =========================
   async speak(text: string, lang?: string): Promise<void> {
 
     const language = lang || this.langService.getLanguage();
 
+    // Prevent overlapping speech
     while (this.speaking) {
       await this.wait(50);
     }
@@ -41,13 +42,10 @@ export class VoiceService {
 
     console.log('🗣️ TTS:', { text, language });
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
 
       try {
-
-        const config =
-          SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
-
+        const config = SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
         config.speechSynthesisVoiceName = this.getVoice(language);
 
         const synth = new SpeechSDK.SpeechSynthesizer(config);
@@ -60,7 +58,8 @@ export class VoiceService {
             this.speaking$.next(false);
             resolve();
           },
-          (err) => {
+          (err: unknown) => {   // ✅ FIXED typing
+            console.error('TTS Error:', err);
             synth.close();
             this.speaking = false;
             this.speaking$.next(false);
@@ -68,7 +67,8 @@ export class VoiceService {
           }
         );
 
-      } catch (e) {
+      } catch (e: unknown) {
+        console.error('TTS Exception:', e);
         this.speaking = false;
         this.speaking$.next(false);
         reject(e);
@@ -77,7 +77,7 @@ export class VoiceService {
   }
 
   // =========================
-  // LISTEN FIXED
+  // SPEECH TO TEXT
   // =========================
   async listen(lang?: string): Promise<string> {
 
@@ -90,29 +90,23 @@ export class VoiceService {
 
     console.log('🎤 STT:', language);
 
-    const config =
-      SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
-
+    const config = SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
     config.speechRecognitionLanguage = language;
 
-    const audio =
-      SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const audio = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const recognizer = new SpeechSDK.SpeechRecognizer(config, audio);
 
-    const recognizer =
-      new SpeechSDK.SpeechRecognizer(config, audio);
-
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
 
       recognizer.recognizeOnceAsync(
-        (result) => {
-
+        (result: any) => {   // ✅ FIXED typing
           recognizer.close();
 
           this.listening = false;
           this.listening$.next(false);
 
           const text =
-            result.reason === SpeechSDK.ResultReason.RecognizedSpeech
+            result?.reason === SpeechSDK.ResultReason.RecognizedSpeech
               ? result.text
               : '';
 
@@ -120,26 +114,35 @@ export class VoiceService {
 
           resolve((text || '').trim());
         },
-        (err) => {
+        (err: unknown) => {   // ✅ FIXED typing
+          console.error('STT Error:', err);
           recognizer.close();
+
           this.listening = false;
           this.listening$.next(false);
+
           reject(err);
         }
       );
     });
   }
 
-  stop() {
+  // =========================
+  // STOP (STATE RESET)
+  // =========================
+  stop(): void {
     this.speaking = false;
     this.listening = false;
     this.speaking$.next(false);
     this.listening$.next(false);
   }
 
-  private getVoice(lang: string) {
+  // =========================
+  // VOICE MAPPING
+  // =========================
+  private getVoice(lang: string): string {
 
-    const map: any = {
+    const map: Record<string, string> = {
       'en-IN': 'en-IN-PrabhatNeural',
       'hi-IN': 'hi-IN-MadhurNeural',
       'te-IN': 'te-IN-MohanNeural'
