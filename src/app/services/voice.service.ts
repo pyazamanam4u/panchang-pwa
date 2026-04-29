@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
 export class VoiceService {
 
   private key = environment.azureSpeechKey;
-  private region = 'centralindia';
+  private region = 'eastus2';
 
   private speaking = false;
   private listening = false;
