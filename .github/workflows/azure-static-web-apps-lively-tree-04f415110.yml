@@ -27,11 +27,12 @@ jobs:
 
       - name: Build and Deploy
         uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_LIVELY_TREE_04F415110 }}
-          action: upload
-          app_location: "/"
-          output_location: "dist/panchang-pwa/browser"
+         with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        action: "upload"
+        app_location: "/"
+        output_location: "dist/panchang-pwa/browser"
+        app_build_command: "npm run build"
           ##github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
 
