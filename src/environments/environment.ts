@@ -6,7 +6,7 @@ export const environment = {
     timeout: 30000,
     retries: 3
   },
-  azureSpeechKey: 'E5yvSgCZUV5hjLVE1EETr6ATAXFNcaNUo3sYdf4xaB78xeZh7fsUJQQJ99CDACHYHv6XJ3w3AAAYACOGVzr1',
+  azureSpeechKey: 'EeYNudkX7dfzAJqLKRZkp74fRhJP58xeAld1Q2rgXykuoW31VGqRJQQJ99CDACHYHv6XJ3w3AAAAACOG0cKt',
   cache: {
     audioCacheDuration: 10 * 60 * 1000, // 10 minutes
     panchangCacheDuration: 24 * 60 * 60 * 1000 // 24 hours

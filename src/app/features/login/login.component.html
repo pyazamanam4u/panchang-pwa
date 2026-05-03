@@ -1,0 +1,27 @@
+<div class="screen">
+
+  <!-- Devotional Background -->
+  <div class="om-layer" style="left:10%">🕉️</div>
+  <div class="om-layer" style="left:70%; animation-delay:5s">🕉️</div>
+
+  <div class="bell" style="left:20%"></div>
+  <div class="bell" style="left:50%; animation-delay:2s"></div>
+  <div class="bell" style="left:80%; animation-delay:4s"></div>
+
+  <!-- Card -->
+  <div class="card login-card">
+
+    <h1>🙏 Divine Connect</h1>
+    <p class="subtitle">Begin your spiritual journey</p>
+
+    <button class="btn-primary"
+            (click)="onLogin()"
+            [disabled]="isLoading">
+
+      {{ isLoading ? 'Connecting...' : 'login' }}
+
+    </button>
+
+  </div>
+
+</div>

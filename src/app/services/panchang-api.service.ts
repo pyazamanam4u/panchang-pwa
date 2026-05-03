@@ -27,4 +27,8 @@ export class PanchangApiService {
       responseType: 'blob',
     });
   }
+
+  submitSankalp(data: any) {
+    return this.http.post('http://localhost:7223/api/HttpStart', data);
+  }
 }

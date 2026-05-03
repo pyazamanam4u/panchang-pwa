@@ -1,1 +1,79 @@
-/* You can add global styles to this file, and also import other style files */
+/* BASE */
+.screen {
+  height: 100vh;
+  width: 100%;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+
+  background: radial-gradient(circle at center, #1b1b1b, #000);
+}
+
+/* ✨ Floating Stars */
+.screen::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background-image: radial-gradient(white 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.08;
+  animation: starMove 60s linear infinite;
+}
+
+/* 🔔 Soft Glow Aura */
+.screen::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 153, 51, 0.12), transparent);
+  animation: glowPulse 5s infinite ease-in-out;
+}
+
+/* 🕉️ OM Symbol Layer */
+.om-layer {
+  position: absolute;
+  font-size: 120px;
+  opacity: 0.03;
+  animation: floatOm 20s infinite linear;
+}
+
+/* Subtle Bells (CSS circles illusion) */
+.bell {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 200, 100, 0.3);
+  border-radius: 50%;
+  animation: floatBell 10s infinite ease-in-out;
+}
+
+/* Animations */
+
+@keyframes starMove {
+  from { transform: translateY(0); }
+  to { transform: translateY(-200px); }
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes floatOm {
+  0% { transform: translateY(100vh); }
+  100% { transform: translateY(-20vh); }
+}
+
+@keyframes floatBell {
+  0% { transform: translateY(0); opacity: 0.2; }
+  50% { opacity: 0.6; }
+  100% { transform: translateY(-200px); opacity: 0; }
+}
+

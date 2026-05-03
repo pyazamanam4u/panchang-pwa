@@ -1,267 +1,364 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { Lang, LanguageService } from '../../services/language.service';
-import { VoiceService } from '../../services/voice.service';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { VoiceService } from '../../services/voice.service';
 
-type Step = 'idle' | 'speaking' | 'listening' | 'confirming';
+enum Step {
+  Init,
+  AskName,
+  AskGotra,
+  AskPurpose,
+  Processing,
+  SpeakingResult,
+  Completed
+}
 
 @Component({
   selector: 'app-conversation',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './conversation.component.html',
   styleUrls: ['./conversation.component.scss']
 })
-export class ConversationComponent implements OnInit, OnDestroy {
+export class ConversationComponent implements OnInit {
 
-  step: Step = 'idle';
+private cd = inject(ChangeDetectorRef);
+  private voice = inject(VoiceService);
 
-  index = 0;
-  currentAnswer = '';
-  answers: Record<string, string> = {};
-get currentQuestion() {
-  return this.getQuestion(this.questions[this.index].key);
+  // 🔥 SESSION CONTROL (CRITICAL FIX)
+  private sessionId = 0;
+
+  audioSrc: string | null = null;
+
+  step: Step = Step.Init;
+  isRestarting = false;
+
+  name = '';
+  gotra = '';
+  purpose = '';
+
+  responseText = '';
+  statusMessage = '';
+
+  isListening = false;
+  isSpeaking = false;
+
+ ngOnInit() {
+
+  this.voice.isListening$.subscribe(v => {
+    setTimeout(() => this.isListening = v);
+  });
+
+  this.voice.isSpeaking$.subscribe(v => {
+    setTimeout(() => this.isSpeaking = v);
+  });
+
+  setTimeout(() => {
+    this.startConversation();
+  });
 }
-  activeLanguage: Lang = 'en-IN';
-
-  private langSub!: Subscription;
-  private running = false;
-
-  private questions = [
-    { key: 'name' },
-    { key: 'gotra' },
-    { key: 'purpose' }
-  ];
-
-  constructor(
-    private voice: VoiceService,
-    private langService: LanguageService
-  ) {}
 
   // =========================
-  // INIT (REACTIVE LANGUAGE)
+  // SESSION MANAGEMENT
   // =========================
-  ngOnInit() {
-
-    this.langService.init();
-
-    this.langSub = this.langService.lang$.subscribe((lang: any) => {
-
-      console.log('🔄 LANGUAGE UPDATE:', lang);
-
-      this.activeLanguage = lang;
-
-      this.resetFlow(); // IMPORTANT FIX
-    });
-
-    if (!this.running) {
-      this.running = true;
-      this.run();
-    }
+  private createSession(): number {
+    this.sessionId++;
+    return this.sessionId;
   }
 
-  ngOnDestroy() {
-    this.langSub?.unsubscribe();
-    this.voice.stop();
-  }
-
-  // =========================
-  // RESET FLOW (FIX OVERLAP)
-  // =========================
-  resetFlow() {
-
-    this.index = 0;
-    this.currentAnswer = '';
-    this.answers = {};
-    this.step = 'idle';
-
-    this.voice.stop();
+  private isValidSession(session: number): boolean {
+    return this.sessionId === session;
   }
 
   // =========================
   // MAIN FLOW
   // =========================
-  async run() {
-    await this.ask();
-  }
+  async startConversation() {
 
-  async ask() {
+    const session = this.createSession();
 
-    this.step = 'speaking';
-
-    const q = this.getQuestion(this.questions[this.index].key);
-
-    await this.voice.speak(q);
-
-    await this.delay(900);
-
-    await this.listen();
-  }
-
-  // =========================
-  // LISTEN
-  // =========================
-  async listen() {
-
-    this.step = 'listening';
-
-    let result = '';
-
-    for (let i = 0; i < 3; i++) {
-
-      result = await this.voice.listen();
-
-      console.log('🎙️ INPUT:', result);
-
-      if (result) break;
-
-      await this.voice.speak(this.getRetryText());
+    try {
+      await this.askName(session);
+      await this.askGotra(session);
+      await this.askPurpose(session);
+      await this.process(session);
+      
+    } catch (e) {
+      console.error('Conversation error:', e);
     }
-
-    if (!result) return this.next();
-
-    this.currentAnswer = result;
-
-    await this.confirm();
   }
 
   // =========================
-  // CONFIRM
+  // STEPS (SESSION SAFE)
   // =========================
-  async confirm() : Promise<void> {
- this.step = 'confirming';
 
-  const confirmText = this.getConfirmText(this.currentAnswer);
+ async askName(session: number) {
 
-  await this.voice.speak(confirmText);
+  if (!this.isValidSession(session)) return;
 
-  await this.delay(500);
+  this.step = Step.AskName;
 
-  let response = '';
+  const prompt = this.buildPrompt('name');
 
-  for (let i = 0; i < 2; i++) {
+  this.statusMessage = prompt;
+this.cd.detectChanges();
+  await this.voice.speak(prompt);
 
-    response = await this.voice.listen();
+  if (!this.isValidSession(session)) return;
 
-    console.log('🧠 CONFIRM INPUT:', response);
+  const result = await this.voice.listen();
 
-    const cleaned = this.clean(response);
+  if (!this.isValidSession(session)) return;
 
-    if (cleaned) {
-      response = cleaned;
-      break;
-    }
-
-    await this.voice.speak(this.getRetryText());
-  }
-
-  // 🚨 STILL EMPTY → retry confirm (NOT question)
-  if (!response) {
-    console.warn('⚠️ Empty confirm → retry confirm');
-    return this.confirm();
-  }
-
-  // ✅ CHECK YES
-  if (this.isYes(response)) {
-
-    console.log('✅ CONFIRMED');
-
-    this.answers[this.questions[this.index].key] = this.currentAnswer;
-
-    return this.next();
-
-  } else {
-
-    console.log('❌ NOT CONFIRMED');
-
-    await this.voice.speak(this.getRetryText());
-
-    return this.ask();
-  }
-  }
-clean(text: string): string {
-  return (text || '')
-    .toLowerCase()
-    .replace(/[?.।]/g, '') // remove punctuation
-    .trim();
+  this.name = result || 'Devotee';
 }
-  // =========================
-  // NEXT
-  // =========================
-  async next() {
 
-    this.index++;
+ async askGotra(session: number) {
 
-    if (this.index < this.questions.length) {
-      await this.ask();
-    } else {
-      this.finish();
+  if (!this.isValidSession(session)) return;
+
+  this.step = Step.AskGotra;
+
+  const prompt = this.buildPrompt('gotra');
+
+  this.statusMessage = prompt;
+this.cd.detectChanges();
+  await this.voice.speak(prompt);
+
+  if (!this.isValidSession(session)) return;
+
+  const result = await this.voice.listen();
+
+  this.gotra = result || 'Unknown Gotra';
+}
+async askPurpose(session: number) {
+
+  if (!this.isValidSession(session)) return;
+
+  this.step = Step.AskPurpose;
+
+  const prompt = this.buildPrompt('purpose');
+
+  this.statusMessage = prompt;
+  this.cd.detectChanges();
+
+  await this.voice.speak(prompt);
+
+  if (!this.isValidSession(session)) return;
+
+  const result = await this.voice.listen();
+
+  this.purpose = result || 'General well-being';
+}
+  async process(session: number) {
+
+    if (!this.isValidSession(session)) return;
+
+    this.step = Step.Processing;
+    this.updateStatusMessage();
+
+    await this.voice.speak('Processing your sankalpam');
+
+    if (!this.isValidSession(session)) return;
+
+    const response = await this.generateSankalpam();
+
+    if (!this.isValidSession(session)) return;
+
+    this.responseText = response;
+
+    this.step = Step.SpeakingResult;
+    this.updateStatusMessage();
+
+    // 🎧 generate audio only (no duplicate speech)
+    this.audioSrc = await this.voice.speakWithAudio(response);
+
+    if (!this.isValidSession(session)) return;
+
+    this.step = Step.Completed;
+    this.updateStatusMessage();
+  }
+
+  // =========================
+  // STATUS
+  // =========================
+  private updateStatusMessage() {
+
+    switch (this.step) {
+
+      case Step.AskName:
+        this.statusMessage = this.random([
+          '🙏 Please say your name',
+          '✨ Tell me your name',
+          '🕉️ Who is performing the sankalpam?'
+        ]);
+        break;
+
+      case Step.AskGotra:
+        this.statusMessage = this.random([
+          '🧬 Please say your gotra',
+          '✨ Tell me your lineage',
+          '🕉️ Which gotra do you belong to?'
+        ]);
+        break;
+
+      case Step.AskPurpose:
+        this.statusMessage = this.random([
+          '🎯 What is your purpose?',
+          '🙏 Tell your intention',
+          '✨ What blessing are you seeking?'
+        ]);
+        break;
+
+      case Step.Processing:
+        this.statusMessage = this.random([
+          '🌀 Aligning with divine energies...',
+          '✨ Preparing your sankalpam...',
+          '🔮 Reading cosmic alignment...'
+        ]);
+        break;
+
+      case Step.SpeakingResult:
+        this.statusMessage = this.random([
+          '🔊 Divine message is being spoken...',
+          '🕉️ Receiving sacred words...',
+          '✨ Blessings are flowing...'
+        ]);
+        break;
+
+      case Step.Completed:
+        this.statusMessage = '✅ Sankalpam completed';
+        break;
+
+      default:
+        this.statusMessage = '';
     }
   }
 
-  finish() {
-
-    this.step = 'idle';
-
-    console.log('🏁 FINAL:', this.answers);
-
-    alert(JSON.stringify(this.answers, null, 2));
+  private random(list: string[]): string {
+    return list[Math.floor(Math.random() * list.length)];
   }
 
   // =========================
-  // HELPERS
+  // MOCK API
   // =========================
-  isYes(text: string) {
-    const t = (text || '').toLowerCase();
-    return t.includes('yes') || t.includes('ok') || t.includes('అవును');
+  async generateSankalpam(): Promise<string> {
+
+    await new Promise(res => setTimeout(res, 1200));
+
+    const today = new Date().toDateString();
+
+    return `
+Om Sri Maha Ganapataye Namaha 🙏
+
+Today (${today}),
+${this.name} of ${this.gotra} gotra,
+is performing Sankalpam for ${this.purpose}.
+
+May divine blessings guide you with peace and prosperity.
+    `;
   }
 
-  getRetryText(): string {
+  // =========================
+  // RESTART (FULL FIX)
+  // =========================
+  async restart() {
 
-  const map: any = {
-    'en-IN': 'Please say yes or no',
-    'hi-IN': 'कृपया हाँ या नहीं बोलें',
-    'te-IN': 'దయచేసి అవును లేదా కాదు చెప్పండి'
+    if (this.isRestarting) return;
+
+    this.isRestarting = true;
+
+    try {
+
+      // 🛑 stop voice immediately
+      this.voice.stop();
+
+      // ❗ invalidate ALL previous flows
+      this.sessionId++;
+
+      // reset UI
+      this.step = Step.Init;
+
+      this.name = '';
+      this.gotra = '';
+      this.purpose = '';
+
+      this.responseText = '';
+      this.audioSrc = null;
+
+      this.statusMessage = '✨ Preparing new session...';
+
+      await new Promise(res => setTimeout(res, 300));
+
+      this.startConversation();
+
+    } finally {
+      this.isRestarting = false;
+    }
+  }
+
+  private buildPrompt(type: 'name' | 'gotra' | 'purpose'): string {
+
+  const lang = this.voice['langService'].getLanguage();
+
+  const prompts: any = {
+
+    'en-IN': {
+      name: [
+        '🙏 Please tell me your name',
+        '✨ May I know your name?',
+        '🕉️ Who is performing the sankalpam?'
+      ],
+      gotra: [
+        `🧬 ${this.name}, please tell your gotra`,
+        '✨ Tell me your lineage',
+        '🕉️ Which gotra do you belong to?'
+      ],
+      purpose: [
+        '🎯 What is your purpose today?',
+        '🙏 Tell your intention',
+        '✨ What blessing are you seeking?'
+      ]
+    },
+
+    'te-IN': {
+      name: [
+        '🙏 మీ పేరు చెప్పండి',
+        '✨ మీ పేరు ఏమిటి?',
+        '🕉️ సంకల్పం ఎవరు చేస్తున్నారు?'
+      ],
+      gotra: [
+        `${this.name}, మీ గోత్రం చెప్పండి`,
+        '🧬 మీ వంశం ఏమిటి?',
+        '🕉️ మీరు ఏ గోత్రానికి చెందారు?'
+      ],
+      purpose: [
+        '🎯 మీ సంకల్పం ఉద్దేశ్యం ఏమిటి?',
+        '🙏 మీరు కోరుకునే ఆశయం ఏమిటి?',
+        '✨ మీరు ఏ ఆశీర్వాదం కోరుతున్నారు?'
+      ]
+    },
+
+    'hi-IN': {
+      name: [
+        '🙏 कृपया अपना नाम बताएं',
+        '✨ आपका नाम क्या है?',
+        '🕉️ संकल्प कौन कर रहा है?'
+      ],
+      gotra: [
+        `${this.name}, अपना गोत्र बताएं`,
+        '🧬 आपकी वंश परंपरा क्या है?',
+        '🕉️ आप किस गोत्र से हैं?'
+      ],
+      purpose: [
+        '🎯 आपका उद्देश्य क्या है?',
+        '🙏 आप क्या संकल्प कर रहे हैं?',
+        '✨ आप कौन सा आशीर्वाद चाहते हैं?'
+      ]
+    }
   };
 
-  return map[this.activeLanguage];
+  const list = prompts[lang]?.[type] || prompts['en-IN'][type];
+
+  return list[Math.floor(Math.random() * list.length)];
 }
-
-  getConfirmText(value: string): string {
-
-  const map: any = {
-    'en-IN': `You said ${value}. Is that correct?`,
-    'hi-IN': `आपने ${value} कहा। क्या यह सही है?`,
-    'te-IN': `మీరు ${value} చెప్పారు. ఇది సరైందా?`
-  };
-
-  return map[this.activeLanguage];
-}
-
-  getQuestion(key: string) {
-
-    const map: any = {
-      'en-IN': {
-        name: 'What is your name?',
-        gotra: 'What is your gotra?',
-        purpose: 'What is your purpose?'
-      },
-      'hi-IN': {
-        name: 'आपका नाम क्या है?',
-        gotra: 'आपका गोत्र क्या है?',
-        purpose: 'आपका संकल्प क्या है?'
-      },
-      'te-IN': {
-        name: 'మీ పేరు ఏమిటి?',
-        gotra: 'మీ గోత్రం ఏమిటి?',
-        purpose: 'మీ సంకల్పం ఏమిటి?'
-      }
-    };
-
-    return map[this.activeLanguage][key];
-  }
-
-  private delay(ms: number) {
-    return new Promise(res => setTimeout(res, ms));
-  }
 }

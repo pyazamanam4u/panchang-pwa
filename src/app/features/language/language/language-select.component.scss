@@ -26,3 +26,15 @@ button {
   background: orange;
   border: none;
 }
+
+.screen::before,
+.screen::after,
+.om-layer,
+.bell {
+  pointer-events: none; // ✅ MUST
+}
+
+.screen > * {
+  position: relative;
+  z-index: 2;
+}

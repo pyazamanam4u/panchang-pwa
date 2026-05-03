@@ -1,110 +1,126 @@
 ﻿.screen {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-/* 🌸 MAIN CARD */
-.card {
+  height: 100vh;
   width: 100%;
-  max-width: 420px;
-  padding: 25px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
+  overflow: hidden;
+
+  background: radial-gradient(circle at center, #1a1a1a, #000);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   color: white;
   text-align: center;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  position: relative;
 }
 
-/* 🪔 HEADER */
-.header {
-  margin-bottom: 20px;
-}
-
-.om {
-  font-size: 36px;
-  color: gold;
-}
-
-h2 {
-  margin: 5px 0;
-  font-size: 20px;
-}
-
-/* ❓ QUESTION */
-.question {
-  font-size: 22px;
-  margin: 15px 0;
-  line-height: 1.4;
-}
-
-/* 🔄 STATE */
-.state {
-  margin-top: 20px;
-}
-
-.icon {
-  font-size: 24px;
-}
-
-.text {
-  margin-top: 5px;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-/* 🎤 MIC */
-.mic {
-  width: 20px;
-  height: 20px;
-  background: red;
-  border-radius: 50%;
-  margin: 10px auto;
-  animation: pulse 1s infinite;
+/* 🌌 subtle glow */
+.bg-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,153,51,0.08), transparent);
+  animation: pulse 6s infinite;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: .6; }
-  50% { transform: scale(1.4); opacity: 1; }
-  100% { transform: scale(1); opacity: .6; }
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
 }
 
-/* 🔊 WAVE */
-.wave span {
-  display: inline-block;
-  width: 5px;
-  height: 15px;
-  margin: 2px;
-  background: gold;
-  animation: wave 1s infinite;
+/* 🕉️ OM symbol */
+.om {
+  position: absolute;
+  font-size: 120px;
+  opacity: 0.05;
+  animation: float 8s infinite ease-in-out;
 }
 
-.wave span:nth-child(2) { animation-delay: 0.2s; }
-.wave span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0); }
+}
+
+/* 🎤 Conversation */
+.conversation-box {
+  z-index: 2;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+}
+
+/* Prompt text */
+.status {
+  font-size: 20px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* 🎤 indicators */
+.voice-indicator {
+  font-size: 18px;
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+.voice-indicator.speaking {
+  color: #ff9933;
+}
+
+/* 🌊 wave animation */
+.wave {
+  width: 60px;
+  height: 6px;
+  margin: 10px auto;
+  background: orange;
+  animation: wave 1s infinite ease-in-out;
+}
 
 @keyframes wave {
-  0%,100% { transform: scaleY(0.5); }
-  50% { transform: scaleY(1.5); }
+  0% { transform: scaleX(1); }
+  50% { transform: scaleX(1.8); }
+  100% { transform: scaleX(1); }
 }
 
-/* 🧾 ANSWER */
-.answer {
-  margin-top: 25px;
-  padding: 15px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.4);
+/* 📜 result */
+.result {
+  z-index: 2;
+  width: 90%;
+  max-width: 400px;
 }
 
-.label {
-  font-size: 12px;
-  opacity: 0.7;
+.sankalpam-text {
+  margin: 20px 0;
+  line-height: 1.6;
+  font-size: 15px;
 }
 
-.value {
-  font-size: 20px;
-  color: #00ffcc;
-  margin-top: 5px;
+audio {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* 🔁 button */
+.btn-primary {
+  margin-top: 20px;
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: none;
+  background: #ff9933;
+  color: white;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* 📱 responsive */
+@media (max-width: 768px) {
+  .status {
+    font-size: 18px;
+  }
+
+  .om {
+    font-size: 80px;
+  }
 }

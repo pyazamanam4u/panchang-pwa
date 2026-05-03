@@ -1,47 +1,19 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { AuthService } from './services/auth.service';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule],
-  templateUrl: './app.html',
-  styleUrls: ['./app.scss']
+  imports: [RouterOutlet],
+  template: `<router-outlet></router-outlet>`
 })
 export class App {
+
   private authService = inject(AuthService);
-  private router = inject(Router);
-  private readonly currentRoute = signal(this.router.url);
-isSpeaking = false;
-isListening = false;
-  protected readonly title = signal('panchang-pwa');
-  protected readonly isLoggedIn = computed(() => this.authService.isLoggedIn());
-  protected readonly showHeader = computed(
-    () => this.isLoggedIn() && !this.currentRoute().startsWith('/login')
-  );
-  protected readonly isGlobalLoading = signal(false);
 
   constructor() {
-    // Subscribe to authentication changes to keep the UI in sync
-    this.authService.isAuthenticated$.subscribe(isAuthenticated => {
-      // The computed signal will automatically update
+    this.authService.isAuthenticated$().subscribe(isAuth => {
+      console.log('Auth State:', isAuth);
     });
-
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationEnd) {
-        this.currentRoute.set(event.urlAfterRedirects || event.url);
-      }
-    });
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-  // Method to control global loading state (can be called by child components)
-  setGlobalLoading(loading: boolean): void {
-    this.isGlobalLoading.set(loading);
   }
 }

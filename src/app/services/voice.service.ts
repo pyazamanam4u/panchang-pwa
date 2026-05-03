@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 declare var SpeechSDK: any;
+
 import { LanguageService } from './language.service';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -13,6 +14,9 @@ export class VoiceService {
   private speaking = false;
   private listening = false;
 
+  private synthesizer: any;
+  private recognizer: any;
+
   private speaking$ = new BehaviorSubject<boolean>(false);
   private listening$ = new BehaviorSubject<boolean>(false);
 
@@ -21,63 +25,98 @@ export class VoiceService {
 
   constructor(private langService: LanguageService) {}
 
-  private wait(ms: number): Promise<void> {
-    return new Promise(res => setTimeout(res, ms));
-  }
-
   // =========================
-  // TEXT TO SPEECH
+  // SPEAK (INTERRUPTIBLE)
   // =========================
   async speak(text: string, lang?: string): Promise<void> {
 
     const language = lang || this.langService.getLanguage();
 
-    // Prevent overlapping speech
-    while (this.speaking) {
-      await this.wait(50);
-    }
+    // Stop any ongoing speech
+    this.stopSpeaking();
 
     this.speaking = true;
     this.speaking$.next(true);
 
-    console.log('🗣️ TTS:', { text, language });
-
-    return new Promise<void>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
       try {
-        const config = SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
+
+        const config =
+          SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
+
         config.speechSynthesisVoiceName = this.getVoice(language);
 
-        const synth = new SpeechSDK.SpeechSynthesizer(config);
+        this.synthesizer = new SpeechSDK.SpeechSynthesizer(config);
 
-        synth.speakTextAsync(
+        this.synthesizer.speakTextAsync(
           text,
           () => {
-            synth.close();
-            this.speaking = false;
-            this.speaking$.next(false);
+            this.cleanupSpeak();
             resolve();
           },
-          (err: unknown) => {   // ✅ FIXED typing
-            console.error('TTS Error:', err);
-            synth.close();
-            this.speaking = false;
-            this.speaking$.next(false);
+          (err: any) => {
+            this.cleanupSpeak();
             reject(err);
           }
         );
 
-      } catch (e: unknown) {
-        console.error('TTS Exception:', e);
-        this.speaking = false;
-        this.speaking$.next(false);
+      } catch (e) {
+        this.cleanupSpeak();
         reject(e);
       }
     });
   }
 
   // =========================
-  // SPEECH TO TEXT
+  // SPEAK WITH AUDIO (NO AUTO PLAY)
+  // =========================
+  async speakWithAudio(text: string): Promise<string> {
+
+    const language = this.langService.getLanguage();
+
+    const config =
+      SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
+
+    config.speechSynthesisVoiceName = this.getVoice(language);
+
+    // 🔥 DO NOT use speaker output here
+    const audioConfig = SpeechSDK.AudioConfig.fromStreamOutput(
+      SpeechSDK.AudioOutputStream.createPullStream()
+    );
+
+    const synth = new SpeechSDK.SpeechSynthesizer(config, audioConfig);
+
+    return new Promise((resolve, reject) => {
+
+      synth.speakTextAsync(
+        text,
+        (result: any) => {
+
+          synth.close();
+
+          const audioData = result.audioData;
+          const blob = new Blob([audioData], { type: 'audio/wav' });
+
+          const reader = new FileReader();
+
+          reader.onloadend = () => {
+            resolve(reader.result as string);
+          };
+
+          reader.readAsDataURL(blob);
+        },
+        (err: any) => {
+          synth.close();
+          reject(err);
+        }
+      );
+
+    });
+  }
+
+  // =========================
+  // LISTEN (ONE-SHOT)
   // =========================
   async listen(lang?: string): Promise<string> {
 
@@ -88,57 +127,76 @@ export class VoiceService {
     this.listening = true;
     this.listening$.next(true);
 
-    console.log('🎤 STT:', language);
+    const config =
+      SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
 
-    const config = SpeechSDK.SpeechConfig.fromSubscription(this.key, this.region);
     config.speechRecognitionLanguage = language;
 
     const audio = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-    const recognizer = new SpeechSDK.SpeechRecognizer(config, audio);
+
+    this.recognizer = new SpeechSDK.SpeechRecognizer(config, audio);
 
     return new Promise<string>((resolve, reject) => {
 
-      recognizer.recognizeOnceAsync(
-        (result: any) => {   // ✅ FIXED typing
-          recognizer.close();
+      this.recognizer.recognizeOnceAsync(
+        (result: any) => {
 
-          this.listening = false;
-          this.listening$.next(false);
+          this.cleanupListen();
 
           const text =
-            result?.reason === SpeechSDK.ResultReason.RecognizedSpeech
+            result.reason === SpeechSDK.ResultReason.RecognizedSpeech
               ? result.text
               : '';
 
-          console.log('🎙️ RESULT:', text);
-
           resolve((text || '').trim());
         },
-        (err: unknown) => {   // ✅ FIXED typing
-          console.error('STT Error:', err);
-          recognizer.close();
-
-          this.listening = false;
-          this.listening$.next(false);
-
+        (err: any) => {
+          this.cleanupListen();
           reject(err);
         }
       );
+
     });
   }
 
   // =========================
-  // STOP (STATE RESET)
+  // STOP (GLOBAL CONTROL)
   // =========================
   stop(): void {
+    this.stopSpeaking();
+    this.stopListening();
+  }
+
+  private stopSpeaking() {
+    if (this.synthesizer) {
+      this.synthesizer.close();
+      this.synthesizer = null;
+    }
+
     this.speaking = false;
-    this.listening = false;
     this.speaking$.next(false);
+  }
+
+  private stopListening() {
+    if (this.recognizer) {
+      this.recognizer.close();
+      this.recognizer = null;
+    }
+
+    this.listening = false;
     this.listening$.next(false);
   }
 
+  private cleanupSpeak() {
+    this.stopSpeaking();
+  }
+
+  private cleanupListen() {
+    this.stopListening();
+  }
+
   // =========================
-  // VOICE MAPPING
+  // VOICE MAP
   // =========================
   private getVoice(lang: string): string {
 

@@ -1,25 +1,56 @@
 ﻿<div class="screen">
 
-  <div class="card">
+  <!-- 🌌 Background Effects -->
+  <div class="bg-overlay"></div>
 
-    <h2>🪔 Sankalpam</h2>
+  <!-- 🕉️ OM Floating -->
+  <div class="om">ॐ</div>
 
-    <div class="state" *ngIf="step==='speaking'">
+  <!-- 🎤 LIVE CONVERSATION -->
+  <div class="conversation-box" *ngIf="!responseText">
+
+    <!-- Status / Prompt -->
+    <div class="status">
+      {{ statusMessage || '✨ Preparing...' }}
+    </div>
+
+    <!-- Listening Indicator -->
+    <div class="voice-indicator" *ngIf="isListening">
+      🎤 Listening...
+      <div class="wave"></div>
+    </div>
+
+    <!-- Speaking Indicator -->
+    <div class="voice-indicator speaking" *ngIf="isSpeaking">
       🔊 Speaking...
     </div>
 
-    <div class="state" *ngIf="step==='listening'">
-      🎤 Listening...
-      <div class="mic"></div>
-    </div>
+  </div>
 
-    <div class="state" *ngIf="step==='confirming'">
-      🧠 Confirming...
-    </div>
+  <!-- 📜 RESULT -->
+  <div class="result" *ngIf="responseText">
 
-    <div class="answer">
-      {{ currentAnswer }}
-    </div>
+    <h3>📜 Sankalpam</h3>
+
+    <p class="sankalpam-text">
+      {{ responseText }}
+    </p>
+
+    <!-- 🎧 Audio Player -->
+    <audio *ngIf="audioSrc"
+           [src]="audioSrc"
+           controls
+           autoplay>
+    </audio>
+
+    <button 
+      class="btn-primary"
+      (click)="restart()"
+      [disabled]="isRestarting">
+
+      {{ isRestarting ? '🔄 Restarting...' : '🔁 Start Again' }}
+
+    </button>
 
   </div>
 
