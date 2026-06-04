@@ -11,7 +11,7 @@ export const environment = {
     panchangBaseUrl: '/api/panchang',
     sankalpamBaseUrl: 'https://mydemowebapi-avbdfuh0b5b4hjcp.centralindia-01.azurewebsites.net/api/panchang'
   },
-  azureSpeechKey: 'CJpvskn0rAn21gYnuOyx7ZD6T6PWc2kPHC1zfTgauF2DYqTcRi2IJQQJ99CFACGhslBXJ3w3AAAYACOG4dW5',
+  azureSpeechKey: '',
   azureSpeechEndpoint: 'https://centralindia.api.cognitive.microsoft.com/',
   cache: {
     audioCacheDuration: 10 * 60 * 1000, // 10 minutes
