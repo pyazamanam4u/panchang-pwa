@@ -1,41 +1,36 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Observable, of, throwError } from 'rxjs';
+import { delay } from 'rxjs/operators';
+import { AuthStore } from '../stores/auth.store';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private authStore = inject(AuthStore);
 
-  private authState = new BehaviorSubject<boolean>(this.hasToken());
-
-  // ✅ Observable-based API (used by guard)
   isAuthenticated$(): Observable<boolean> {
-    return this.authState.asObservable();
+    return toObservable(this.authStore.isAuthenticated);
   }
 
-  // Keep sync version (optional, for quick checks)
-  isAuthenticated(): boolean {
-    return this.authState.value;
+  getUserName(): string | null {
+    return this.authStore.userName();
   }
 
-  loginWithSSO(): Observable<{ token: string }> {
-    return new Observable(observer => {
-      setTimeout(() => {
-        localStorage.setItem('auth_token', 'dummy-token');
-        this.authState.next(true);
+  login(username: string, password: string): Observable<boolean> {
+    if (!username.trim() || !password.trim()) {
+      return throwError(() => new Error('Username and password are required.'));
+    }
 
-        observer.next({ token: 'dummy-token' });
-        observer.complete();
-      }, 1500);
-    });
+    return of(true).pipe(delay(800));
   }
 
-  logout() {
-    localStorage.removeItem('auth_token');
-    this.authState.next(false);
+  completeLogin(username: string): void {
+    this.authStore.setUser(username.trim());
   }
 
-  private hasToken(): boolean {
-    return !!localStorage.getItem('auth_token');
+  logout(): void {
+    this.authStore.clear();
   }
 }

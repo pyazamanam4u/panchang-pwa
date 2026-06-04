@@ -1,27 +1,39 @@
 <div class="screen">
-
-  <!-- Devotional Background -->
   <div class="om-layer" style="left:10%">🕉️</div>
   <div class="om-layer" style="left:70%; animation-delay:5s">🕉️</div>
-
   <div class="bell" style="left:20%"></div>
   <div class="bell" style="left:50%; animation-delay:2s"></div>
   <div class="bell" style="left:80%; animation-delay:4s"></div>
 
-  <!-- Card -->
-  <div class="card login-card">
+  <mat-card class="login-card">
+    <div class="brand">
+      <div class="symbol">ॐ</div>
+      <div>
+        <h1>Sankalpam</h1>
+        <p class="subtitle">Secure your sacred session</p>
+      </div>
+    </div>
 
-    <h1>🙏 Divine Connect</h1>
-    <p class="subtitle">Begin your spiritual journey</p>
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username" autocomplete="username" />
+      </mat-form-field>
 
-    <button class="btn-primary"
-            (click)="onLogin()"
-            [disabled]="isLoading">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      </mat-form-field>
 
-      {{ isLoading ? 'Connecting...' : 'login' }}
+      <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-    </button>
+      <button mat-raised-button color="primary" class="full-width" type="submit" [disabled]="isLoading || loginForm.invalid">
+        <span *ngIf="!isLoading">Login</span>
+        <span *ngIf="isLoading">Connecting…</span>
+        <mat-progress-spinner *ngIf="isLoading" diameter="22" mode="indeterminate"></mat-progress-spinner>
+      </button>
+    </form>
 
-  </div>
-
+    <p class="hint">Temporary authentication for a premium Sankalpam experience.</p>
+  </mat-card>
 </div>

@@ -5,8 +5,9 @@ import { LanguageSelectComponent } from './features/language/language/language-s
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', component: LoginComponent },
-  { path: 'language', component: LanguageSelectComponent }, // 👈 target
-  { path: 'conversation', component: ConversationComponent },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'language', component: LanguageSelectComponent, canActivate: [authGuard] },
+  { path: 'conversation', component: ConversationComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' }
 ];

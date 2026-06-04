@@ -1,6 +1,8 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoiceService } from '../../services/voice.service';
+import { SankalpamService } from '../../services/sankalpam.service';
+import { UserDetails, SankalpamRequest } from '../../core/types/api.models';
 
 enum Step {
   Init,
@@ -23,11 +25,16 @@ export class ConversationComponent implements OnInit {
 
 private cd = inject(ChangeDetectorRef);
   private voice = inject(VoiceService);
+  private sankalpamService = inject(SankalpamService);
 
   // 🔥 SESSION CONTROL (CRITICAL FIX)
   private sessionId = 0;
 
+  @ViewChild('audioPlayer', { static: false }) private audioPlayer?: ElementRef<HTMLAudioElement>;
+
   audioSrc: string | null = null;
+  speechTextToPlay: string | null = null;
+  isAudioPlaying = false;
 
   step: Step = Step.Init;
   isRestarting = false;
@@ -44,20 +51,24 @@ private cd = inject(ChangeDetectorRef);
 
  ngOnInit() {
 
-  this.voice.isListening$.subscribe(v => {
-    setTimeout(() => this.isListening = v);
-  });
+    this.voice.isListening$.subscribe(v => {
+      setTimeout(() => {
+        this.isListening = v;
+        this.cd.detectChanges();
+      });
+    });
 
-  this.voice.isSpeaking$.subscribe(v => {
-    setTimeout(() => this.isSpeaking = v);
-  });
+    this.voice.isSpeaking$.subscribe(v => {
+      setTimeout(() => {
+        this.isSpeaking = v;
+        this.cd.detectChanges();
+      });
+    });
 
-  setTimeout(() => {
-    this.startConversation();
-  });
-}
-
-  // =========================
+    setTimeout(() => {
+      this.startConversation();
+    });
+  }
   // SESSION MANAGEMENT
   // =========================
   private createSession(): number {
@@ -83,7 +94,7 @@ private cd = inject(ChangeDetectorRef);
       await this.process(session);
       
     } catch (e) {
-      console.error('Conversation error:', e);
+      this.statusMessage = 'An error occurred while running the conversation. Please try again.';
     }
   }
 
@@ -169,13 +180,41 @@ async askPurpose(session: number) {
     this.step = Step.SpeakingResult;
     this.updateStatusMessage();
 
-    // 🎧 generate audio only (no duplicate speech)
-    this.audioSrc = await this.voice.speakWithAudio(response);
+    if (!this.audioSrc && this.speechTextToPlay) {
+      // audio will be played by button click using browser TTS fallback
+    }
 
     if (!this.isValidSession(session)) return;
 
     this.step = Step.Completed;
     this.updateStatusMessage();
+  }
+
+  async playAudio(): Promise<void> {
+    if (this.audioSrc && this.audioPlayer?.nativeElement) {
+      try {
+        await this.audioPlayer.nativeElement.play();
+        this.isAudioPlaying = true;
+      } catch {
+        this.isAudioPlaying = false;
+      }
+      return;
+    }
+
+    if (this.speechTextToPlay) {
+      try {
+        this.isAudioPlaying = true;
+        await this.voice.speak(this.speechTextToPlay);
+      } catch {
+        // ignore playback errors
+      } finally {
+        this.isAudioPlaying = false;
+      }
+    }
+  }
+
+  onAudioEnded(): void {
+    this.isAudioPlaying = false;
   }
 
   // =========================
@@ -243,19 +282,43 @@ async askPurpose(session: number) {
   // =========================
   async generateSankalpam(): Promise<string> {
 
-    await new Promise(res => setTimeout(res, 1200));
+    // Build minimal user details payload from collected inputs
+    const userDetails: UserDetails = {
+      fullName: this.name || 'Devotee',
+      gotra: this.gotra || 'Unknown',
+      gender: 'Other',
+      date: new Date().toISOString(),
+      locationName: '',
+      latitude: 0,
+      longitude: 0,
+      intention: this.purpose || ''
+    };
 
-    const today = new Date().toDateString();
+    const request: SankalpamRequest = {
+      userDetails,
+      panchangam: {
+        tithi: '',
+        nakshatra: '',
+        yoga: '',
+        karana: '',
+        masa: '',
+        ayana: '',
+        ritu: '',
+        samvatsara: ''
+      },
+      language: (this.voice as any).langService?.getLanguage?.() || 'en-IN'
+    };
 
-    return `
-Om Sri Maha Ganapataye Namaha 🙏
-
-Today (${today}),
-${this.name} of ${this.gotra} gotra,
-is performing Sankalpam for ${this.purpose}.
-
-May divine blessings guide you with peace and prosperity.
-    `;
+    try {
+      const result = await this.sankalpamService.generateSankalpam(request);
+      const sankalpamText = result.sankalpaTemplate || '';
+      this.speechTextToPlay = sankalpamText || null;
+      this.audioSrc = result.audioUrl?.trim() || null;
+      return sankalpamText;
+    } catch (e) {
+      this.speechTextToPlay = `Om Sri Maha Ganapataye Namaha 🙏\n\n${this.name} of ${this.gotra} gotra, is performing Sankalpam for ${this.purpose}.`;
+      return this.speechTextToPlay;
+    }
   }
 
   // =========================
@@ -284,6 +347,7 @@ May divine blessings guide you with peace and prosperity.
 
       this.responseText = '';
       this.audioSrc = null;
+      this.speechTextToPlay = null;
 
       this.statusMessage = '✨ Preparing new session...';
 

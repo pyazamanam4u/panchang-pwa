@@ -37,11 +37,19 @@
     </p>
 
     <!-- 🎧 Audio Player -->
-    <audio *ngIf="audioSrc"
+    <audio #audioPlayer
+           *ngIf="audioSrc"
            [src]="audioSrc"
-           controls
-           autoplay>
+           (ended)="onAudioEnded()">
     </audio>
+
+    <button 
+      class="btn-primary audio-play"
+      *ngIf="audioSrc || speechTextToPlay"
+      [disabled]="isAudioPlaying"
+      (click)="playAudio()">
+      {{ isAudioPlaying ? '⏳ Playing Sankalpam...' : '▶️ Play Sankalpam Audio' }}
+    </button>
 
     <button 
       class="btn-primary"

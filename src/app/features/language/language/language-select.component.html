@@ -1,14 +1,18 @@
 <div class="screen">
+  <mat-card class="language-card">
+    <div class="header">
+      <div class="icon">ॐ</div>
+      <div>
+        <h1>Choose your language</h1>
+        <p>Begin Sankalpam in the voice that feels sacred.</p>
+      </div>
+    </div>
 
-  <div class="card">
-
-    <div class="title">🕉️ Select Language</div>
-    <div class="subtitle">Choose your preferred language</div>
-
-    <button class="btn-primary" (click)="select('en-IN')">English</button>
-    <button class="btn-primary" (click)="select('te-IN')">తెలుగు</button>
-    <button class="btn-primary" (click)="select('hi-IN')">हिंदी</button>
-
-  </div>
-
+    <div class="language-grid">
+      <button mat-stroked-button class="language-button" *ngFor="let language of languages" (click)="select(language.code)">
+        <span class="language-label">{{ language.display }}</span>
+        <span class="language-detail">{{ language.label }}</span>
+      </button>
+    </div>
+  </mat-card>
 </div>

@@ -13,7 +13,6 @@ export class App {
 
   constructor() {
     this.authService.isAuthenticated$().subscribe(isAuth => {
-      console.log('Auth State:', isAuth);
     });
   }
 }

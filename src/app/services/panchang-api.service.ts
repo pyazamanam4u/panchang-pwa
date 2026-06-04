@@ -29,6 +29,7 @@ export class PanchangApiService {
   }
 
   submitSankalp(data: any) {
-    return this.http.post('http://localhost:7223/api/HttpStart', data);
+    console.log('Submitting sankalp data to API', data);
+    return this.http.post('https://mydemowebapi-avbdfuh0b5b4hjcp.centralindia-01.azurewebsites.net/api/panchang?date=' + data.split('T')[0] + '&latitude=17&longitude=78', {});
   }
 }
