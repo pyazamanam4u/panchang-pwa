@@ -11,11 +11,17 @@ export const environment = {
     panchangBaseUrl: '/api/panchang',
     sankalpamBaseUrl: 'https://mydemowebapi-avbdfuh0b5b4hjcp.centralindia-01.azurewebsites.net/api/panchang'
   },
-  azureSpeechKey: 'CJpvskn0rAn21gYnuOyx7ZD6T6PWc2kPHC1zfTgauF2DYqTcRi2IJQQJ99CFACGhslBXJ3w3AAAYACOG4dW5',
-  azureSpeechEndpoint: 'https://centralindia.api.cognitive.microsoft.com/',
+  azureSpeechKey: '',
+  azureSpeechEndpoint: '',
+  azureTtsEndpoint: '',
+  azureSttEndpoint: '',
+  openaiBaseUrl: '',
+  openaiApiKey: '',
   cache: {
     audioCacheDuration: 10 * 60 * 1000, // 10 minutes
-    panchangCacheDuration: 24 * 60 * 60 * 1000 // 24 hours
+    panchangCacheDuration: 24 * 60 * 60 * 1000, // 24 hours
+    sankalpaTextCacheDuration: 30 * 60 * 1000, // 30 minutes - cache refined text
+    sankalpaAudioCacheDuration: 60 * 60 * 1000 // 60 minutes - cache generated audio
   },
   speech: {
     defaultLang: 'hi-IN',

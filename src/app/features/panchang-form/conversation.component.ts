@@ -2,7 +2,9 @@ import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, OnInit } f
 import { CommonModule } from '@angular/common';
 import { VoiceService } from '../../services/voice.service';
 import { SankalpamService } from '../../services/sankalpam.service';
+import { OpenaiRefinementService } from '../../services/openai-refinement.service';
 import { UserDetails, SankalpamRequest } from '../../core/types/api.models';
+import { AiTtsService } from '../../services/azure-tts-cache.service';
 
 enum Step {
   Init,
@@ -26,11 +28,13 @@ export class ConversationComponent implements OnInit {
 private cd = inject(ChangeDetectorRef);
   private voice = inject(VoiceService);
   private sankalpamService = inject(SankalpamService);
+  private openaiRefinement = inject(OpenaiRefinementService);
+  private azureTtsCache = inject(AiTtsService);
+
+  @ViewChild('audioPlayer', { static: false }) private audioPlayer?: ElementRef<HTMLAudioElement>;
 
   // 🔥 SESSION CONTROL (CRITICAL FIX)
   private sessionId = 0;
-
-  @ViewChild('audioPlayer', { static: false }) private audioPlayer?: ElementRef<HTMLAudioElement>;
 
   audioSrc: string | null = null;
   speechTextToPlay: string | null = null;
@@ -193,14 +197,15 @@ async askPurpose(session: number) {
   async playAudio(): Promise<void> {
     if (this.audioSrc && this.audioPlayer?.nativeElement) {
       try {
-        await this.audioPlayer.nativeElement.play();
         this.isAudioPlaying = true;
+        await this.audioPlayer.nativeElement.play();
       } catch {
         this.isAudioPlaying = false;
       }
       return;
     }
 
+    // Fallback: use voice service for text-to-speech if no audio URL available
     if (this.speechTextToPlay) {
       try {
         this.isAudioPlaying = true;
@@ -311,9 +316,20 @@ async askPurpose(session: number) {
 
     try {
       const result = await this.sankalpamService.generateSankalpam(request);
-      const sankalpamText = result.sankalpaTemplate || '';
+      let sankalpamText = result.sankalpaTemplate || '';
+      
+      // Refine text via OpenAI for better eloquence before audio
+      if (sankalpamText) {
+        sankalpamText = await this.openaiRefinement.refineText(sankalpamText, request.language);
+      }
+      
+      // Generate or retrieve cached audio from Azure TTS
+      this.audioSrc = await this.azureTtsCache.getAudio(
+        sankalpamText,
+        request.language
+      );
+      
       this.speechTextToPlay = sankalpamText || null;
-      this.audioSrc = result.audioUrl?.trim() || null;
       return sankalpamText;
     } catch (e) {
       this.speechTextToPlay = `Om Sri Maha Ganapataye Namaha 🙏\n\n${this.name} of ${this.gotra} gotra, is performing Sankalpam for ${this.purpose}.`;
